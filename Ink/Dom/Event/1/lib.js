@@ -30,12 +30,71 @@ Ink.createModule('Ink.Dom.Event', 1, [], function() {
     KEY_PAGEUP:   33,
     KEY_PAGEDOWN: 34,
     KEY_INSERT:   45,
-
+    
+    /**
+     * Returns a function which calls `func`, waiting at least `wait`
+     * milliseconds between calls. This is useful for events such as `scroll`
+     * or `resize`, which can be triggered too many times per second, slowing
+     * down the browser with needless function calls.
+     *
+     * *note:* This does not delay the first function call to the function.
+     *
+     * @method throttle
+     * @param {Function} func   Function to call. Arguments and context are both passed.
+     * @param {Number} [wait=0] Milliseconds to wait between calls.
+     *
+     * @example
+     *  
+     *  // BEFORE
+     *  InkEvent.observe(window, 'scroll', function () {
+     *      ...
+     *  }); // When scrolling on mobile devices or on firefox's smooth scroll
+     *      // this is expensive because onscroll is called many times
+     *
+     *  // AFTER
+     *  InkEvent.observe(window, 'scroll', InkEvent.throttle(function () {
+     *      ...
+     *  }, 100)); // The event handler is called only every 100ms. Problem solved.
+     *
+     * @example
+     *  var handler = InkEvent.throttle(function () {
+     *      ...
+     *  }, 100);
+     *
+     *  InkEvent.observe(window, 'scroll', handler);
+     *  InkEvent.observe(window, 'resize', handler);
+     *
+     *  // on resize, both the "scroll" and the "resize" events are triggered
+     *  // a LOT of times. This prevents both of them being called a lot of
+     *  // times when the window is being resized by a user.
+     *
+     **/
+    throttle: function (func, wait) {
+        wait = wait || 0;
+        var lastCall = 0;  // Warning: This breaks on Jan 1st 1970 0:00
+        var timeout;
+        var throttled = function () {
+            var now = +new Date();
+            var timeDiff = now - lastCall;
+            if (timeDiff >= wait) {
+                lastCall = now;
+                return func.apply(this, [].slice.call(arguments));
+            } else {
+                var that = this;
+                var args = [].slice.call(arguments);
+                clearTimeout(timeout);
+                timeout = setTimeout(function () {
+                    return throttled.apply(that, args);
+                });
+            }
+        };
+        return throttled;
+    },
 
     /**
      * Returns the target of the event object
      *
-     * @function element
+     * @method element
      * @param {Object} ev  event object
      * @return {Node} The target
      */
@@ -55,7 +114,7 @@ Ink.createModule('Ink.Dom.Event', 1, [], function() {
     /**
      * Returns the related target of the event object
      *
-     * @function relatedTarget
+     * @method relatedTarget
      * @param {Object} ev event object
      * @return {Node} The related target
      */
@@ -75,7 +134,7 @@ Ink.createModule('Ink.Dom.Event', 1, [], function() {
      *
      * If such tag is not found, `document` is returned.
      *
-     * @function findElement
+     * @method findElement
      * @param {Object}  ev              event object
      * @param {String}  elmTagName      tag name to find
      * @param {Boolean} [force=false]   If this is true, never return `document`, and returns `false` instead.
@@ -107,7 +166,7 @@ Ink.createModule('Ink.Dom.Event', 1, [], function() {
     /**
      * Dispatches an event to element
      *
-     * @function fire
+     * @method fire
      * @param {DOMElement|String}  element    element id or element
      * @param {String}             eventName  event name
      * @param {Object}             [memo]     metadata for the event
@@ -203,51 +262,60 @@ Ink.createModule('Ink.Dom.Event', 1, [], function() {
         }
     },
 
+    _callbackForCustomEvents: function (element, eventName, callBack) {
+        var isHashChangeInIE = eventName === "hashchange" && element.attachEvent && !window.onhashchange;
+        var isCustomEvent = eventName.indexOf(':') !== -1;
+        if (isHashChangeInIE || isCustomEvent) {
+            /**
+             *
+             * prevent that each custom event fire without any test
+             * This prevents that if you have multiple custom events
+             * on dataavailable to trigger the callback event if it
+             * is a different custom event
+             *
+             */
+            var argCallback = callBack;
+            return Ink.bindEvent(function(ev, eventName, cb){
+
+              //tests if it is our event and if not
+              //check if it is IE and our dom:loaded was overrided (IE only supports one ondatavailable)
+              //- fix /opera also supports attachEvent and was firing two events
+              // if(ev.eventName === eventName || (Ink.Browser.IE && eventName === 'dom:loaded')){
+              if(ev.eventName === eventName){
+                //fix for FF since it loses the event in case of using a second binObjEvent
+                if(window.addEventListener){
+                  window.event = ev;
+                }
+                cb();
+              }
+
+            }, this, eventName, argCallback);
+        } else {
+            return null;
+        }
+    },
+
     /**
      * Attaches an event to element
      *
-     * @function observe
-     * @param {DOMElement|String}  element      element id or element
-     * @param {String}             eventName    event name
-     * @param {Function}           callBack     receives event object as a
+     * @method observe
+     * @param {DOMElement|String}  element      Element id or element
+     * @param {String}             eventName    Event name
+     * @param {Function}           callBack     Receives event object as a
      * parameter. If you're manually firing custom events, check the
      * eventName property of the event object to make sure you're handling
      * the right event.
-     * @param {Boolean}            [useCapture]  set to true to change event listening from bubbling to capture.
+     * @param {Boolean}            [useCapture] Set to true to change event listening from bubbling to capture.
+     * @return {Function} The event handler used. Hang on to this if you want to `stopObserving` later.
      */
     observe: function(element, eventName, callBack, useCapture)
     {
         element = Ink.i(element);
         if(element !== null && element !== undefined) {
-            if(eventName.indexOf(':') !== -1 ||
-                (eventName === "hashchange" && element.attachEvent && !window.onhashchange)
-                ) {
-
-                /**
-                 *
-                 * prevent that each custom event fire without any test
-                 * This prevents that if you have multiple custom events
-                 * on dataavailable to trigger the callback event if it
-                 * is a different custom event
-                 *
-                 */
-                var argCallback = callBack;
-                callBack = Ink.bindEvent(function(ev, eventName, cb){
-
-                  //tests if it is our event and if not
-                  //check if it is IE and our dom:loaded was overrided (IE only supports one ondatavailable)
-                  //- fix /opera also supports attachEvent and was firing two events
-                  // if(ev.eventName === eventName || (Ink.Browser.IE && eventName === 'dom:loaded')){
-                  if(ev.eventName === eventName){
-                    //fix for FF since it loses the event in case of using a second binObjEvent
-                    if(window.addEventListener){
-                      window.event = ev;
-                    }
-                    cb();
-                  }
-
-                }, this, eventName, argCallback);
-
+            /* rare corner case: some events need a different callback to be generated */
+            var callbackForCustomEvents = this._callbackForCustomEvents(element, eventName, callBack);
+            if (callbackForCustomEvents) {
+                callBack = callbackForCustomEvents;
                 eventName = 'dataavailable';
             }
 
@@ -256,13 +324,46 @@ Ink.createModule('Ink.Dom.Event', 1, [], function() {
             } else {
                 element.attachEvent('on' + eventName, callBack);
             }
+            return callBack;
         }
+    },
+
+    /**
+     * Attaches an event to a selector or array of elements.
+     *
+     * Requires Ink.Dom.Selector or a browser with Element.querySelectorAll.
+     *
+     * Ink.Dom.Event.observe
+     *
+     * @method observeMulti
+     * @param {Array|String} elements
+     * @param ... See the `observe` function.
+     * @return {Function} The used callback.
+     */
+    observeMulti: function (elements, eventName, callBack, useCapture) {
+        if (typeof elements === 'string') {
+            elements = Ink.ss(elements);
+        } else if (elements instanceof Element) {
+            elements = [elements];
+        }
+        if (!elements[0]) { return false; }
+
+        var callbackForCustomEvents = this._callbackForCustomEvents(elements[0], eventName, callBack);
+        if (callbackForCustomEvents) {
+            callBack = callbackForCustomEvents;
+            eventName = 'dataavailable';
+        }
+
+        for (var i = 0, len = elements.length; i < len; i++) {
+            this.observe(elements[i], eventName, callBack, useCapture);
+        }
+        return callBack;
     },
 
     /**
      * Remove an event attached to an element
      *
-     * @function stopObserving
+     * @method stopObserving
      * @param {DOMElement|String}  element       element id or element
      * @param {String}             eventName     event name
      * @param {Function}           callBack      callback function
@@ -284,7 +385,7 @@ Ink.createModule('Ink.Dom.Event', 1, [], function() {
     /**
      * Stops event propagation and bubbling
      *
-     * @function stop
+     * @method stop
      * @param {Object} event  event handle
      */
     stop: function(event)
@@ -309,7 +410,7 @@ Ink.createModule('Ink.Dom.Event', 1, [], function() {
     /**
      * Stops event propagation
      *
-     * @function stopPropagation
+     * @method stopPropagation
      * @param {Object} event  event handle
      */
     stopPropagation: function(event) {
@@ -324,7 +425,7 @@ Ink.createModule('Ink.Dom.Event', 1, [], function() {
     /**
      * Stops event default behaviour
      *
-     * @function stopDefault
+     * @method stopDefault
      * @param {Object} event  event handle
      */
     stopDefault: function(event)
@@ -341,7 +442,7 @@ Ink.createModule('Ink.Dom.Event', 1, [], function() {
     },
 
     /**
-     * @function pointer
+     * @method pointer
      * @param {Object} ev event object
      * @return {Object} an object with the mouse X and Y position
      */
@@ -354,7 +455,7 @@ Ink.createModule('Ink.Dom.Event', 1, [], function() {
     },
 
     /**
-     * @function pointerX
+     * @method pointerX
      * @param {Object} ev event object
      * @return {Number} mouse X position
      */
@@ -364,7 +465,7 @@ Ink.createModule('Ink.Dom.Event', 1, [], function() {
     },
 
     /**
-     * @function pointerY
+     * @method pointerY
      * @param {Object} ev event object
      * @return {Number} mouse Y position
      */
@@ -374,7 +475,7 @@ Ink.createModule('Ink.Dom.Event', 1, [], function() {
     },
 
     /**
-     * @function isLeftClick
+     * @method isLeftClick
      * @param {Object} ev  event object
      * @return {Boolean} True if the event is a left mouse click
      */
@@ -394,7 +495,7 @@ Ink.createModule('Ink.Dom.Event', 1, [], function() {
     },
 
     /**
-     * @function isRightClick
+     * @method isRightClick
      * @param {Object} ev  event object
      * @return {Boolean} True if there is a right click on the event
      */
@@ -403,7 +504,7 @@ Ink.createModule('Ink.Dom.Event', 1, [], function() {
     },
 
     /**
-     * @function isMiddleClick
+     * @method isMiddleClick
      * @param {Object} ev  event object
      * @return {Boolean} True if there is a middle click on the event
      */
@@ -421,7 +522,7 @@ Ink.createModule('Ink.Dom.Event', 1, [], function() {
      * Work in Progress.
      * Used in SAPO.Component.MaskedInput
      *
-     * @function getCharFromKeyboardEvent
+     * @method getCharFromKeyboardEvent
      * @param {KeyboardEvent}     event           keyboard event
      * @param {optional Boolean}  [changeCasing]  if true uppercases, if false lowercases, otherwise keeps casing
      * @return {String} character representation of pressed key combination

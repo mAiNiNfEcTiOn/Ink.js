@@ -1,11 +1,9 @@
-/*globals self*/
 /*
  * @module Ink.UI.Draggable_1
  * @author inkdev AT sapo.pt
  * @version 1
  */
-Ink.createModule("Ink.UI.Draggable","1",["Ink.Dom.Element_1", "Ink.Dom.Event_1", "Ink.Dom.Css_1", "Ink.Dom.Browser_1", "Ink.UI.Droppable_1", "Ink.Dom.Selector_1", "Ink.UI.Aux_1"],function( InkElement, InkEvent, Css, Browser, Droppable, Selector, Aux) {
-
+Ink.createModule("Ink.UI.Draggable","1",["Ink.Dom.Element_1", "Ink.Dom.Event_1", "Ink.Dom.Css_1", "Ink.Dom.Browser_1", "Ink.Dom.Selector_1", "Ink.UI.Aux_1"],function( InkElement, InkEvent, Css, Browser, Selector, Aux) {
     var x = 0,
         y = 1;  // For accessing coords in [x, y] arrays
     
@@ -22,16 +20,16 @@ Ink.createModule("Ink.UI.Draggable","1",["Ink.Dom.Element_1", "Ink.Dom.Event_1",
      * @constructor
      * @param {String|DOMElement} target    Target element.
      * @param {Object} [options] Optional object for configuring the component
-     *     @param {String}            [options.constraint]     Movement constraint. None by default. Can be `vertical`, `horizontal`, or `both`.
-     *     @param {String|DomElement} [options.constraintElm]  Constrain dragging to be within this element. None by default.
-     *     @param {Number}            [options.top,left,right,bottom]   Limits for constraining draggable movement
-     *     @param {String|DOMElement} [options.handle]        if specified, only this element will be used for dragging instead of the whole target element
-     *     @param {Boolean}           [options.revert]         if true, reverts the draggable to the original position when dragging stops
-     *     @param {String}            [options.cursor]         cursor type used over the draggable object
-     *     @param {Number}            [options.zIndex]         zindex applied to the draggable element while dragged
-     *     @param {Number}            [options.fps]            if defined, on drag will run every n frames per second only
-     *     @param {DomElement}        [options.droppableProxy] if set, a shallow copy of the droppableProxy will be put on document.body with transparent bg
-     *     @param {String}            [options.mouseAnchor]    defaults to mouse cursor. can be 'left|center|right top|center|bottom'
+     *     @param {String}            [options.constraint]      Movement constraint. None by default. Can be `vertical`, `horizontal`, or `both`.
+     *     @param {String|DomElement} [options.constraintElm]   Constrain dragging to be within this element. None by default.
+     *     @param {Number}            [options.top,left,right,bottom]   Limits for constraining draggable movement.
+     *     @param {String|DOMElement} [options.handle]          if specified, this element will be used as a handle for dragging.
+     *     @param {Boolean}           [options.revert]          if true, reverts the draggable to the original position when dragging stops
+     *     @param {String}            [options.cursor]          cursor type (CSS `cursor` value) used when the mouse is over the draggable object
+     *     @param {Number}            [options.zIndex]          zindex applied to the draggable element while dragged
+     *     @param {Number}            [options.fps]             if defined, on drag will run every n frames per second only
+     *     @param {DomElement}        [options.droppableProxy]  if set, a shallow copy of the droppableProxy will be put on document.body with transparent bg
+     *     @param {String}            [options.mouseAnchor]     defaults to mouse cursor. can be 'left|center|right top|center|bottom'
      *     @param {String}            [options.dragClass='drag'] class to add when the draggable is being dragged.
      *     @param {Function}          [options.onStart]        callback called when dragging starts
      *     @param {Function}          [options.onEnd]          callback called when dragging stops
@@ -39,7 +37,7 @@ Ink.createModule("Ink.UI.Draggable","1",["Ink.Dom.Element_1", "Ink.Dom.Event_1",
      *     @param {Function}          [options.onChange]       callback called while dragging, after position updates
      * @example
      *     Ink.requireModules( ['Ink.UI.Draggable_1'], function( Draggable ){
-     *         new Draggable( 'myElementId' );
+     *         new Draggable( '#myElementId' );
      *     });
      */
     var Draggable = function(element, options) {
@@ -76,6 +74,7 @@ Ink.createModule("Ink.UI.Draggable","1",["Ink.Dom.Element_1", "Ink.Dom.Event_1",
                 droppableProxy:     false,
                 mouseAnchor:        undefined,
                 skipChildren:       true,
+                fps:                100,
                 debug:              false
             }, options || {}, InkElement.data(element));
 
@@ -96,7 +95,7 @@ Ink.createModule("Ink.UI.Draggable","1",["Ink.Dom.Element_1", "Ink.Dom.Event_1",
 
             if (o.fps) {
                 this.deltaMs = 1000 / o.fps;
-                this.lastRanAt = 0;
+                this.lastRunAt = 0;
             }
 
             this.handlers = {};
@@ -107,7 +106,8 @@ Ink.createModule("Ink.UI.Draggable","1",["Ink.Dom.Element_1", "Ink.Dom.Event_1",
             this.handlers.selectStart   = function(event) {    InkEvent.stop(event);    return false;    };
 
             // set handle
-            this.handle = (this.options.handle) ? Aux.elOrSelector(this.options.handle) : this.element;
+            this.handle = (this.options.handle) ?
+                Aux.elOrSelector(this.options.handle) : this.element;
             this.handle.style.cursor = o.cursor;
 
             InkEvent.observe(this.handle, 'touchstart', this.handlers.start);
@@ -230,6 +230,8 @@ Ink.createModule("Ink.UI.Draggable","1",["Ink.Dom.Element_1", "Ink.Dom.Event_1",
                     this.applyDelta = [this.delta2[x] - ad[x], this.delta2[y] - ad[y]];
                 }
 
+                var dragHandlerName = this.options.fps ? 'dragFacade' : 'drag';
+
                 this.placeholder = div;
 
                 if (this.options.onStart) {        this.options.onStart(this.element, e);        }
@@ -254,11 +256,12 @@ Ink.createModule("Ink.UI.Draggable","1",["Ink.Dom.Element_1", "Ink.Dom.Event_1",
                     while (firstEl && firstEl.nodeType !== 1) {    firstEl = firstEl.nextSibling;    }
                     document.body.insertBefore(this.proxy, firstEl);
 
-                    InkEvent.observe(this.proxy, 'mousemove', this.handlers[this.options.fps ? 'dragFacade' : 'drag']);
-                    InkEvent.observe(this.proxy, 'touchmove', this.handlers[this.options.fps ? 'dragFacade' : 'drag']);
+                    
+                    InkEvent.observe(this.proxy, 'mousemove', this.handlers[dragHandlerName]);
+                    InkEvent.observe(this.proxy, 'touchmove', this.handlers[dragHandlerName]);
                 }
                 else {
-                    InkEvent.observe(document, 'mousemove', this.handlers[this.options.fps ? 'dragFacade' : 'drag']);
+                    InkEvent.observe(document, 'mousemove', this.handlers[dragHandlerName]);
                 }
 
                 this.element.style.position = 'absolute';
@@ -282,9 +285,9 @@ Ink.createModule("Ink.UI.Draggable","1",["Ink.Dom.Element_1", "Ink.Dom.Event_1",
          * @private
          */
         _onDragFacade: function(e) {
-            var now = new Date().getTime();
-            if (!this.lastRanAt || now > this.lastRanAt + this.deltaMs) {
-                this.lastRanAt = now;
+            var now = +new Date();
+            if (!this.lastRunAt || now > this.lastRunAt + this.deltaMs) {
+                this.lastRunAt = now;
                 this._onDrag(e);
             }
         },
@@ -307,11 +310,7 @@ Ink.createModule("Ink.UI.Draggable","1",["Ink.Dom.Element_1", "Ink.Dom.Event_1",
                     newX        = false,
                     newY        = false;
 
-                if (!this.prevCoords) {        this.prevCoords = {x: 0, y: 0};        }
-                
-
-
-                if (mPosX !== this.prevCoords.x || mPosY !== this.prevCoords.y) {
+                if (this.prevCoords && mPosX !== this.prevCoords.x || mPosY !== this.prevCoords.y) {
                     if (o.onDrag) {        o.onDrag(this.element, e);        }
                     this.prevCoords = mouseCoords;
 
@@ -343,6 +342,7 @@ Ink.createModule("Ink.UI.Draggable","1",["Ink.Dom.Element_1", "Ink.Dom.Event_1",
                         }
                     }
 
+                    var Droppable = Ink.getModule('Ink.UI.Droppable_1');
                     if (this.firstDrag) {
                         if (Droppable) {    Droppable.updateAll();    }
                         /*this.element.style.position = 'absolute';
@@ -356,19 +356,9 @@ Ink.createModule("Ink.UI.Draggable","1",["Ink.Dom.Element_1", "Ink.Dom.Event_1",
 
                     if (Droppable) {
                         // apply applyDelta defined on drag init
-                        var mouseCoords2 = this.options.mouseAnchor ? {x: mPosX - this.applyDelta[x], y: mPosY - this.applyDelta[y]} : mouseCoords;
-
-                        // for debugging purposes
-                        // if (this.options.debug) {
-                        //     if (!this.pt) {
-                        //         this.pt = Debug.addPoint(document.body, [mouseCoords2.x, mouseCoords2.y], '#0FF', 9);
-                        //         this.pt.style.zIndex = this.options.zindex + 1;
-                        //     }
-                        //     else {
-                        //         Debug.movePoint(this.pt, [mouseCoords2.x, mouseCoords2.y]);
-                        //     }
-                        // }
-
+                        var mouseCoords2 = this.options.mouseAnchor ?
+                            {x: mPosX - this.applyDelta[x], y: mPosY - this.applyDelta[y]} :
+                            mouseCoords;
                         Droppable.action(mouseCoords2, 'drag', e, this.element);
                     }
                     if (o.onChange) {    o.onChange(this);    }
@@ -428,7 +418,8 @@ Ink.createModule("Ink.UI.Draggable","1",["Ink.Dom.Element_1", "Ink.Dom.Event_1",
                 if (this.options.onEnd) {
                     this.options.onEnd(this.element, e);
                 }
-
+                
+                var Droppable = Ink.getModule('Ink.UI.Droppable_1');
                 if (Droppable) {
                     Droppable.action(this._getCoords(e), 'drop', e, this.element);
                 }
