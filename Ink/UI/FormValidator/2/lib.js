@@ -533,24 +533,26 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
                 this._parseRules( this._options.rules );
             }
 
-            for(var rule in this._rules){
+            if( ("required" in this._rules) || (this.getValue() !== '') ){
+                for(var rule in this._rules){
 
-                if( this._rules.hasOwnProperty( rule ) && (typeof validationFunctions[rule] === 'function') ){
+                    if( this._rules.hasOwnProperty( rule ) && (typeof validationFunctions[rule] === 'function') ){
 
-                    if( validationFunctions[rule].apply(this, this._rules[rule] ) === false ){
+                        if( validationFunctions[rule].apply(this, this._rules[rule] ) === false ){
 
-                        this._addError( rule, validationMessages[rule] || 'Error message not defined' );
+                            this._addError( rule, validationMessages[rule] || 'Error message not defined' );
+                            return false;
+
+                        }
+
+                    } else {
+
+                        this._addError( rule, validationMessages['validation_function_not_found'] );
                         return false;
 
                     }
 
-                } else {
-
-                    this._addError( rule, validationMessages['validation_function_not_found'] );
-                    return false;
-
                 }
-
             }
 
             return true;
