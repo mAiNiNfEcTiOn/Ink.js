@@ -433,10 +433,12 @@ Ink.createModule('Ink.UI.Modal', '1', ['Ink.UI.Aux_1','Ink.Dom.Event_1','Ink.Dom
             this._contentElement = this._modalDiv;
             this._shadeElement   = this._modalShadow;
 
-            /**
-             * Setting the content of the modal
-             */
-            this.setContentMarkup( this._options.markup );
+            if( !this._markupMode ){
+                /**
+                 * Setting the content of the modal
+                 */
+                this.setContentMarkup( this._options.markup );
+            }
 
             /**
              * If any size has been user-defined, let's set them as max-width and max-height
