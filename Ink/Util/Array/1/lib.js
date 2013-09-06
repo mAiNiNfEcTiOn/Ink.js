@@ -177,7 +177,7 @@ Ink.createModule('Ink.Util.Array', '1', [], function() {
          * @method forEach
          */
         each: function () {
-            InkArray.forEach.call(InkArray, arguments);
+            InkArray.forEach.apply(InkArray, [].slice.call(arguments));
         },
 
         /**
