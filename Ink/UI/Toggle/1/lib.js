@@ -1,5 +1,5 @@
 /**
-00 * @module Ink.UI.Toggle_1
+ * @module Ink.UI.Toggle_1
  * @author inkdev AT sapo.pt
  * @version 1
  */
@@ -8,7 +8,7 @@ Ink.createModule('Ink.UI.Toggle', '1', ['Ink.UI.Aux_1','Ink.Dom.Event_1','Ink.Do
 
     /**
      * Toggle component
-     * 
+     *
      * @class Ink.UI.Toggle
      * @constructor
      * @version 1
@@ -109,7 +109,7 @@ Ink.createModule('Ink.UI.Toggle', '1', ['Ink.UI.Aux_1','Ink.Dom.Event_1','Ink.Do
 
         /**
          * Init function called by the constructor
-         * 
+         *
          * @method _init
          * @private
          */
@@ -126,7 +126,7 @@ Ink.createModule('Ink.UI.Toggle', '1', ['Ink.UI.Aux_1','Ink.Dom.Event_1','Ink.Do
         /**
          * Event handler. It's responsible for handling the <triggerEvent> defined in the options.
          * This will trigger the toggle.
-         * 
+         *
          * @method _onTriggerEvent
          * @param {Event} event
          * @private
@@ -168,7 +168,7 @@ Ink.createModule('Ink.UI.Toggle', '1', ['Ink.UI.Aux_1','Ink.Dom.Event_1','Ink.Do
 
         /**
          * Click handler. Will handle clicks outside the toggle component.
-         * 
+         *
          * @method _onClick
          * @param {Event} event
          * @private
@@ -179,7 +179,11 @@ Ink.createModule('Ink.UI.Toggle', '1', ['Ink.UI.Aux_1','Ink.Dom.Event_1','Ink.Do
                 shades
             ;
 
-            if( (this._rootElement === tgtEl) || Element.isAncestorOf( this._rootElement, tgtEl ) || Element.isAncestorOf( this._childElement, tgtEl ) ){
+            if(
+                (this._rootElement === tgtEl) || (this._childElement === tgtEl) ||
+                Element.descendantOf( this._rootElement, tgtEl ) ||
+                Element.descendantOf( this._childElement, tgtEl )
+            ){
                 return;
             } else if( (shades = Ink.ss('.ink-shade')).length ) {
                 var
@@ -193,16 +197,17 @@ Ink.createModule('Ink.UI.Toggle', '1', ['Ink.UI.Aux_1','Ink.Dom.Event_1','Ink.Do
                 }
             }
 
-            if(!Element.findUpwardsByClass(tgtEl, 'toggle')) {
+            var upperElm = Element.findUpwardsByClass(tgtEl, 'toggle');
+            if( upperElm && (upperElm === this._rootElement) ) {
                 return;
             }
-            
+
             this._dismiss( this._rootElement );
         },
 
         /**
          * Dismisses the toggling.
-         * 
+         *
          * @method _dismiss
          * @private
          */
