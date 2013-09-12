@@ -8,9 +8,13 @@
         <link rel="stylesheet" href="http://cdn.ink.sapo.pt/2.2.0/css/ink-min.css" />
         <link rel="stylesheet" href="http://cdn.ink.sapo.pt/2.2.0/css/docs.css" />
 
-        <script type="text/javascript" src="http://cdn.ink.sapo.pt/2.2.0/js/ink.min.js"></script>
+        <script type="text/javascript" src="/Ink/1/lib.js"></script>
+        <script type="text/javascript">
+            Ink.setPath('Ink', '/Ink/');
+        </script>
+        <script type="text/javascript" src="/Ink/Util/Validator/1/lib.js"></script>
         <script type="text/javascript" src="/Ink/UI/FormValidator/2/lib.js"></script>
-        <script type="text/javascript" src="http://cdn.ink.sapo.pt/2.2.0/js/ink-ui.min.js"></script>
+        <script type="text/javascript" src="http://cdn.ink.sapo.pt/2.2.0/js/ink-ui.js"></script>
         <style>
             pre.prettyprint{
                 font-size: 0.75em;
@@ -39,7 +43,14 @@
                         <div class="control-group required">
                             <label for="name">Name:</label>
                             <div class="control">
-                                <input type="text" data-rules="required|alpha[true]" name="name" id="name" />
+                                <input type="text" data-rules="required|text[true,false]" name="name" id="name" />
+                            </div>
+                        </div>
+
+                        <div class="control-group required">
+                            <label for="ip">IP address:</label>
+                            <div class="control">
+                                <input type="text" data-rules="required|ip" name="ip" id="ip" />
                             </div>
                         </div>
 
@@ -61,6 +72,20 @@
                             <label for="confpass">Confirm Password:</label>
                             <div class="control">
                                 <input type="password" name="confpass" id="confpass" data-rules="matches[pass]" />
+                            </div>
+                        </div>
+
+                        <div class="control-group required">
+                            <label for="number">A number between -1.23 and 2.25 with at most 2 decimal points!</label>
+                            <div class="control">
+                                <input type="text" name="number" id="number" data-rules="required|numeric[.,2]|range[-1.23,2.25]" />
+                            </div>
+                        </div>
+
+                        <div class="control-group required">
+                            <label for="creditcard">Credit card</label>
+                            <div class="control">
+                                <input type="text" name="creditcard" id="creditcard" data-rules="credit_card" />
                             </div>
                         </div>
 

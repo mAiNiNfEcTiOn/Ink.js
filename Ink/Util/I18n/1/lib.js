@@ -221,11 +221,11 @@ Ink.createModule('Ink.Util.I18n', '1', [], function () {
             if ( typeof original === 'number' ) { original += ''; }
 
             if (typeof original === 'string') {
-                original = original.replace( pattrText , function( m , $1 , $2 , $3 , i ) {
+                original = original.replace( pattrText , function( m , $1 , $2 , $3 ) {
                     var ret =
                         $1 ? $1 :
                         $2 ? pars[ $2 - ( isObj ? 0 : 1 ) ] :
-                        $3 ? pars[ 0 ][ $3 ] :
+                        $3 ? pars[ 0 ][ $3 ] || '' :
                              pars[ (idx++) + ( isObj ? 1 : 0 ) ]
                     return funcOrVal( ret , [idx].concat(pars) );
                 });
