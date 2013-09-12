@@ -183,15 +183,16 @@
          */
         createModule: function(mod, ver, deps, modFn) { // define
             var cb = function() {
-                /*global console:false */
-
                 //console.log(['createModule(', mod, ', ', ver, ', [', deps.join(', '), '], ', !!modFn, ')'].join(''));
 
+                if (typeof mod !== 'string') {
+                    throw new Error('module name must be a string!');
+                }
 
                 // validate version correctness
                 if (typeof ver === 'number' || (typeof ver === 'string' && ver.length > 0)) {
                 } else {
-                    throw new Error('version must be passed!');
+                    throw new Error('version number missing!');
                 }
 
                 var modAll = [mod, '_', ver].join('');
@@ -280,6 +281,13 @@
                 remaining: f,
                 cb: cbFn
             };
+
+            if (!(typeof deps === 'object' && deps.length !== undefined)) {
+                throw new Error('Dependency list should be an array!');
+            }
+            if (typeof cbFn !== 'function') {
+                throw new Error('Callback should be a function!');
+            }
 
             for (i = 0; i < f; ++i) {
                 dep = deps[i];
