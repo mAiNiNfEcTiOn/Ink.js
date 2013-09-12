@@ -576,10 +576,31 @@ Ink.createModule('Ink.Dom.Element', 1, [], function() {
          * @return {Array} array with element's width and height
          */
         elementDimensions: function(element) {
-            if(typeof element === "string") {
-                element = document.getElementById(element);
-            }
+            element = Ink.i(element);
             return Array(element.offsetWidth, element.offsetHeight);
+        },
+
+        /**
+         * Check whether an element is inside the viewport
+         *
+         * @method inViewport
+         * @param {DOMElement} element Element to check
+         * @param {Boolean} [partial=false] Return `true` even if it is only partially visible.
+         * @return {Boolean}
+         */
+        inViewport: function (element, partial) {
+            var rect = Ink.i(element).getBoundingClientRect();
+            if (partial) {
+                return  rect.bottom > 0                        && // from the top
+                        rect.left < Element.viewportWidth()    && // from the right
+                        rect.top < Element.viewportHeight()    && // from the bottom
+                        rect.right  > 0;                          // from the left
+            } else {
+                return  rect.top > 0                           && // from the top
+                        rect.right < Element.viewportWidth()   && // from the right
+                        rect.bottom < Element.viewportHeight() && // from the bottom
+                        rect.left  > 0;                           // from the left
+            }
         },
 
         /**
