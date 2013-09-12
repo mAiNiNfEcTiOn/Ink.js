@@ -227,6 +227,214 @@ Ink.createModule('Ink.Util.Validator', '1', [], function() {
                     },
 
         /**
+         * Regular expression groups for several groups of characters
+         *
+         * http://en.wikipedia.org/wiki/C0_Controls_and_Basic_Latin
+         * http://en.wikipedia.org/wiki/Plane_%28Unicode%29#Basic_Multilingual_Plane
+         * http://en.wikipedia.org/wiki/ISO_8859-1
+         *
+         * @property _characterGroups
+         * @type {Object}
+         * @private
+         * @static
+         * @readOnly
+         */
+        _characterGroups: {
+            numbers: ['0-9'],
+            asciiAlpha: ['a-zA-Z'],
+            latin1Alpha: ['a-zA-Z', '\u00C0-\u00FF'],
+            unicodeAlpha: ['a-zA-Z', '\u00C0-\u00FF', '\u0100-\u1FFF', '\u2C00-\uD7FF'],
+            /* whitespace characters */
+            space: [' '],
+            dash: ['-'],
+            underscore: ['_'],
+            nicknamePunctuation: ['_.-'],
+
+            singleLineWhitespace: ['\t '],
+            newline: ['\n'],
+            whitespace: ['\t\n\u000B\f\r\u00A0 '],
+
+            asciiPunctuation: ['\u0021-\u002F', '\u003A-\u0040', '\u005B-\u0060', '\u007B-\u007E'],
+            latin1Punctuation: ['\u0021-\u002F', '\u003A-\u0040', '\u005B-\u0060', '\u007B-\u007E', '\u00A1-\u00BF', '\u00D7', '\u00F7'],
+            unicodePunctuation: ['\u0021-\u002F', '\u003A-\u0040', '\u005B-\u0060', '\u007B-\u007E', '\u00A1-\u00BF', '\u00D7', '\u00F7', '\u2000-\u206F', '\u2E00-\u2E7F', '\u3000-\u303F'],
+        },
+
+        /**
+         * Create a regular expression for several character groups.
+         *
+         * @method createRegExp
+         *
+         * @param Groups... {Object}
+         *  Groups to build regular expressions for. Possible keys are:
+         *
+         * - **numbers**: 0-9
+         * - **asciiAlpha**: a-z, A-Z
+         * - **latin1Alpha**: asciiAlpha, plus printable characters in latin-1
+         * - **unicodeAlpha**: unicode alphanumeric characters.
+         * - **space**: ' ', the space character.
+         * - **dash**: dash character.
+         * - **underscore**: underscore character.
+         * - **nicknamePunctuation**: dash, dot, underscore
+         * - **singleLineWhitespace**: space and tab (whitespace which only spans one line).
+         * - **newline**: newline character ('\n')
+         * - **whitespace**: whitespace characters in the ASCII character set.
+         * - **asciiPunctuation**: punctuation characters in the ASCII character set.
+         * - **latin1Punctuation**: punctuation characters in latin-1.
+         * - **unicodePunctuation**: punctuation characters in unicode.
+         *
+         */
+        createRegExp: function (groups) {
+            var re = '^[';
+            for (var key in groups) if (groups.hasOwnProperty(key)) {
+                if (!(key in Validator._characterGroups)) {
+                    throw new Error('group ' + key + ' is not a valid character group');
+                } else if (groups[key]) {
+                    re += Validator._characterGroups[key].join('');
+                }
+            }
+            return new RegExp(re + ']*?$');
+        },
+
+        /**
+         * Checks if a field has the required groups. Takes an options object for further configuration.
+         *
+         * @method checkCharacterGroups
+         * @param {String}  s               The validation string
+         * @param {Object}  [groups={}]     What groups are included.
+         *  @param [options.*]              See createRegexp
+         */
+        checkCharacterGroups: function (s, groups) {
+            return Validator.createRegExp(groups).test(s);
+        },
+
+        /**
+         * Checks whether a field contains unicode printable characters. Takes an
+         * options object for further configuration
+         *
+         * @method unicode
+         * @param {String}  s               The validation string
+         * @param {Object}  [options={}]    Optional configuration object
+         *  @param [options.*]              See createRegexp
+         */
+        unicode: function (s, options) {
+            return Validator.checkCharacterGroups(s, Ink.extendObj({
+                unicodeAlpha: true}, options));
+        },
+
+        /**
+         * Checks that a field only contains only latin-1 alphanumeric
+         * characters. Takes options for allowing singleline whitespace,
+         * cross-line whitespace and punctuation.
+         *
+         * @method latin1
+         *
+         * @param {String}  s               The validation string
+         * @param {Object}  [options={}]    Optional configuration object
+         *  @param [options.*]              See createRegexp
+         */
+        latin1: function (s, options) {
+            return Validator.checkCharacterGroups(s, Ink.extendObj({
+                latin1Alpha: true}, options));
+        },
+
+        /**
+         * Checks that a field only contains only ASCII alphanumeric
+         * characters. Takes options for allowing singleline whitespace,
+         * cross-line whitespace and punctuation.
+         *
+         * @method ascii
+         *
+         * @param {String}  s               The validation string
+         * @param {Object}  [options={}]    Optional configuration object
+         *  @param [options.*]              See createRegexp
+         */
+        ascii: function (s, options) {
+            return Validator.checkCharacterGroups(s, Ink.extendObj({
+                asciiAlpha: true}, options));
+        },
+
+        /**
+         * Checks that the number is a valid number
+         *
+         * @method number
+         * @param {String} numb         The number
+         * @param {Object} [options]    Further options
+         *  @param  [options.decimalSep='.']    Allow decimal separator.
+         *  @param  [options.thousandSep=","]   Strip this character from the number.
+         *  @param  [options.negative=false]    Allow negative numbers.
+         *  @param  [options.decimalPlaces=0]   Maximum number of decimal places. `0` means integer number.
+         *  @param  [options.max=null]          Maximum number
+         *  @param  [options.min=null]          Minimum number
+         *  @param  [options.returnNumber=false] When this option is true, return the number itself when the value is valid.
+         */
+        number: function (numb, inOptions) {
+            numb = numb + '';
+            var options = Ink.extendObj({
+                decimalSep: '.',
+                thousandSep: '',
+                negative: true,
+                decimalPlaces: null,
+                maxDigits: null,
+                max: null,
+                min: null,
+                returnNumber: false
+            }, inOptions || {});
+            // smart recursion thing sets up aliases for options.
+            if (options.thousandSep) {
+                numb = numb.replace(new RegExp('\\' + options.thousandSep, 'g'), '');
+                options.thousandSep = '';
+                return Validator.number(numb, options);
+            }
+            if (options.negative === false) {
+                options.min = 0;
+                options.negative = true;
+                return Validator.number(numb, options);
+            }
+            if (options.decimalSep !== '.') {
+                numb = numb.replace(new RegExp('\\' + options.decimalSep, 'g'), '.');
+            }
+
+            if (!/^(-)?(\d+)?(\.\d+)?$/.test(numb) || numb === '') {
+                return false;  // forbidden character found
+            }
+            
+            var split;
+            if (options.decimalSep && numb.indexOf(options.decimalSep) !== -1) {
+                split = numb.split(options.decimalSep);
+                if (options.decimalPlaces !== null &&
+                        split[1].length > options.decimalPlaces) {
+                    return false;
+                }
+            } else {
+                split = ['' + numb, ''];
+            }
+            
+            if (options.maxDigits!== null) {
+                if (split[0].replace(/-/g, '').length > options.maxDigits) {
+                    return split
+                }
+            }
+            
+            // Now look at the actual float
+            var ret = parseFloat(numb);
+            
+            if (options.maxExcl !== null && ret >= options.maxExcl ||
+                    options.minExcl !== null && ret <= options.minExcl) {
+                return false;
+            }
+            if (options.max !== null && ret > options.max ||
+                    options.min !== null && ret < options.min) {
+                return false;
+            }
+            
+            if (options.returnNumber) {
+                return ret;
+            } else {
+                return true;
+            }
+        },
+
+        /**
          * Checks if a year is Leap "Bissexto"
          *
          * @method _isLeapYear
@@ -353,11 +561,11 @@ Ink.createModule('Ink.Util.Validator', '1', [], function() {
          * @static
          * @example
          *     Ink.requireModules(['Ink.Util.Validator_1'], function( InkValidator ){
-         *         console.log( InkValidator.mail( 'agfsdfgfdsgdsf' ) ); // Result: false
-         *         console.log( InkValidator.mail( 'inkdev\u0040sapo.pt' ) ); // Result: true (where \u0040 is at sign)
+         *         console.log( InkValidator.email( 'agfsdfgfdsgdsf' ) ); // Result: false
+         *         console.log( InkValidator.email( 'inkdev\u0040sapo.pt' ) ); // Result: true (where \u0040 is at sign)
          *     });
          */
-        mail: function(email)
+        email: function(email)
         {
             var emailValido = new RegExp("^[_a-z0-9-]+((\\.|\\+)[_a-z0-9-]+)*@([\\w]*-?[\\w]*\\.)+[a-z]{2,4}$", "i");
             if(!emailValido.test(email)) {
@@ -366,6 +574,15 @@ Ink.createModule('Ink.Util.Validator', '1', [], function() {
                 return true;
             }
         },
+
+        /**
+         * Deprecated. Alias for email(). Use it instead.
+         *
+         * @method mail
+         * @public
+         * @static
+         */
+        mail: function (mail) { return Validator.email(mail); },
 
         /**
          * Checks if a url is valid
@@ -928,7 +1145,7 @@ Ink.createModule('Ink.Util.Validator', '1', [], function() {
                 return false;
             }
 
-            ipType = ipType || 'ipv4';
+            ipType = (ipType || 'ipv4').toLowerCase();
 
             switch( ipType ){
                 case 'ipv4':
@@ -950,7 +1167,7 @@ Ink.createModule('Ink.Util.Validator', '1', [], function() {
         _creditCardSpecs: {
             'default': {
                 'length': '13,14,15,16,17,18,19',
-                'prefix': '',
+                'prefix': /^.+/,
                 'luhn': true
             },
 
@@ -999,6 +1216,7 @@ Ink.createModule('Ink.Util.Validator', '1', [], function() {
 
         /**
          * Luhn function, to be used when validating credit cards
+         *
          */
         _luhn: function (num){
 

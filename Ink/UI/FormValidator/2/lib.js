@@ -3,7 +3,7 @@
  * @author inkdev AT sapo.pt
  * @version 2
  */
-Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_1','Ink.Dom.Event_1','Ink.Dom.Selector_1','Ink.Dom.Css_1','Ink.Util.Validator_1'], function( Aux, Element, Event, Selector, Css, InkValidator ) {
+Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_1','Ink.Dom.Event_1','Ink.Dom.Selector_1','Ink.Dom.Css_1','Ink.Util.Array_1','Ink.Util.I18n_1','Ink.Util.Validator_1'], function( Aux, Element, Event, Selector, Css, InkArray, I18n, InkValidator ) {
     'use strict';
 
     /**
@@ -116,16 +116,9 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
                 return false;
             }
 
-            if( phoneType ){
-                phoneType = phoneType.toUpperCase();
-                if( ("is" + phoneType + "Phone") in InkValidator ){
-                    return InkValidator["is" + phoneType + "Phone"]( value );
-                }
-            } else {
-                return InkValidator.isPhone( value );
-            }
+            var countryCode = phoneType ? phoneType.toUpperCase() : '';
 
-            return false;
+            return InkValidator['is' + countryCode + 'Phone'](value);
         },
 
         /**
@@ -141,7 +134,7 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
                 return false;
             }
 
-            return InkValidator.isCreditCard( value, cardType );
+            return InkValidator.isCreditCard( value, cardType || 'default' );
         },
 
         /**
@@ -160,15 +153,42 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * Checks if the value only contains alphabetical values.
          *
          * @method validationFunctions.alpha
-         * @param  {String} value   Value to be checked
-         * @return {Boolean}         True if the value is alphabetical-only. False if not.
+         * @param  {String} value           Value to be checked
+         * @param  {Boolean} supportSpaces  Allow whitespace
+         * @return {Boolean}                True if the value is alphabetical-only. False if not.
          */
         'alpha': function( value, supportSpaces ){
-            supportSpaces = supportSpaces || false;
-            if( supportSpaces ){
-                value = value.replace(/\ /g,'');
-            }
-            return ((typeof value === 'string') && /^[a-zA-Z]+$/.test(value));
+            return InkValidator.ascii(value, {singleLineWhitespace: supportSpaces});
+        },
+
+        /*
+         * Check that the value contains only printable unicode text characters
+         * from the Basic Multilingual plane (BMP)
+         * Optionally allow punctuation and whitespace
+         *
+         * @method validationFunctions.text
+         * @param {String} value    Value to be checked
+         * @return {Boolean}        Whether the value only contains printable text characters
+         **/
+        'text': function (value, whitespace, punctuation) {
+            return InkValidator.unicode(value, {
+                singleLineWhitespace: whitespace,
+                unicodePunctuation: punctuation});
+        },
+
+        /*
+         * Check that the value contains only printable text characters 
+         * available in the latin-1 encoding.
+         *
+         * Optionally allow punctuation and whitespace
+         *
+         * @method validationFunctions.text
+         * @param {String} value    Value to be checked
+         * @return {Boolean}        Whether the value only contains printable text characters
+         **/
+        'latin': function (value, punctuation, whitespace) {
+            if ( typeof value !== 'string') { return false; }
+            return InkValidator.latin1(value, {latin1Punctuation: punctuation, singleLineWhitespace: whitespace});
         },
 
         /**
@@ -179,7 +199,7 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @return {Boolean}         True if the value is a valid alphanumerical. False if not.
          */
         'alpha_numeric': function( value ){
-            return ((typeof value === 'string') && /^[a-zA-Z0-9]+$/.test(value));
+            return InkValidator.ascii(value, {numbers: true});
         },
 
         /**
@@ -190,7 +210,7 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @return {Boolean}         True if the value is a valid. False if not.
          */
         'alpha_dash': function( value ){
-            return ((typeof value === 'string') && /^[a-zA-Z\-\_]+$/.test(value));
+            return InkValidator.ascii(value, {dash: true, underscore: true});
         },
 
         /**
@@ -213,11 +233,10 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @return {Boolean}         True if the value is a valid integer. False if not.
          */
         'integer': function( value, positive ){
-            if( positive ){
-                return ((typeof value === 'string') && /^[0-9]+$/.test(value));
-            } else {
-                return ((typeof value === 'string') && /^\-?[0-9]+$/.test(value));
-            }
+            return InkValidator.number(value, {
+                negative: !positive,
+                decimalPlaces: 0
+            });
         },
 
         /**
@@ -226,29 +245,16 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @method validationFunctions.decimal
          * @param  {String} value   Value to be checked
          * @param  {String} decimalSeparator Character that splits the integer part from the decimal one. By default is '.'.
-         * @param  {String} [decimalPlaces] Number of digits that the decimal part must have.
-         * @param  {String} [leftDigits] Number of digits that the integer part must have, when provided.
+         * @param  {String} [decimalPlaces] Maximum number of digits that the decimal part must have.
+         * @param  {String} [leftDigits] Maximum number of digits that the integer part must have, when provided.
          * @return {Boolean}         True if the value is a valid decimal number. False if not.
          */
         'decimal': function( value, decimalSeparator, decimalPlaces, leftDigits ){
-
-            decimalSeparator = decimalSeparator || '.';
-
-            var parcels = value.split(decimalSeparator);
-
-            if( parcels.length !== 2 ){
-                return false;
-            }
-
-            if( !validationFunctions.integer(parcels[0]) || !validationFunctions.integer(parcels[1],true) ){
-                return false;
-            }
-
-            return (
-                ( ( typeof leftDigits === 'undefined' ) || ( parcels[0].length === parseInt(leftDigits,10) ) )
-                && ( ( typeof decimalPlaces === 'undefined' ) || ( parcels[1].length === parseInt(decimalPlaces,10) ) )
-            );
-
+            return InkValidator.number(value, {
+                decimalSep: decimalSeparator || '.',
+                decimalPlaces: +decimalPlaces || null,
+                maxDigits: +leftDigits
+            });
         },
 
         /**
@@ -257,19 +263,21 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @method validationFunctions.numeric
          * @param  {String} value   Value to be checked
          * @param  {String} decimalSeparator Verifies if it's a valid decimal. Otherwise checks if it's a valid integer.
+         * @param  {String} [decimalPlaces] (when the number is decimal) Maximum number of digits that the decimal part must have.
+         * @param  {String} [leftDigits] (when the number is decimal) Maximum number of digits that the integer part must have, when provided.
          * @return {Boolean}         True if the value is numeric. False if not.
          */
-        'numeric': function( value, decimalSeparator ){
+        'numeric': function( value, decimalSeparator, decimalPlaces, leftDigits ){
             decimalSeparator = decimalSeparator || '.';
             if( value.indexOf(decimalSeparator) !== -1  ){
-                return validationFunctions.decimal( value, decimalSeparator );
+                return validationFunctions.decimal( value, decimalSeparator, decimalPlaces, leftDigits );
             } else {
                 return validationFunctions.integer( value );
             }
         },
 
         /**
-         * Checks if the value is in a specific range of values.
+         * Checks if the value is in a specific range of values. The parameters after the first one are used for specifying the range, and are similar in function to python's range() function.
          *
          * @method validationFunctions.range
          * @param  {String} value   Value to be checked
@@ -279,13 +287,23 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @return {Boolean}         True if the value is within the range. False if not.
          */
         'range': function( value, minValue, maxValue, multipleOf ){
-            if( (parseInt(value,10) < parseInt(minValue,10)) || (parseInt(value,10) > parseInt(maxValue,10)) ){
+            value = +value;
+            minValue = +minValue;
+            maxValue = +maxValue;
+
+            if (isNaN(value) || isNaN(minValue) || isNaN(maxValue)) {
                 return false;
             }
 
-            multipleOf = multipleOf || 1;
+            if( value < minValue || value > maxValue ){
+                return false;
+            }
 
-            return ( ( ( parseInt(value,10)-parseInt(minValue,10) ) % parseInt(multipleOf,10) ) === 0 );
+            if (multipleOf) {
+                return (value - minValue) % multipleOf === 0;
+            } else {
+                return true;
+            }
         },
 
         /**
@@ -307,8 +325,8 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @param  {String} fieldToCompare Name or ID of the field to compare.
          * @return {Boolean}         True if the values match. False if not.
          */
-        'matches': function( value, fieldToCompare, arrElements ){
-            return ( value === arrElements[fieldToCompare][0].getValue() );
+        'matches': function( value, fieldToCompare ){
+            return ( value === this.getFormElements()[fieldToCompare][0].getValue() );
         }
 
     };
@@ -319,31 +337,58 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
      * @private
      * @static
      */
-    var validationMessages = {
-
-        'required' : 'The :field filling is mandatory',
-        'min_length': 'The :field must have a minimum size of :param1 characters',
-        'max_length': 'The :field must have a maximum size of :param1 characters',
-        'exact_length': 'The :field must have an exact size of :param1 characters',
-        'email': 'The :field must have a valid e-mail address',
-        'url': 'The :field must have a valid URL',
-        'ip': 'The :field does not contain a valid :param1 IP address',
-        'phone': 'The :field does not contain a valid :param1 phone number',
-        'credit_card': 'The :field does not contain a valid :param1 credit card',
-        'date': 'The :field should contain a date in the :param1 format',
-        'alpha': 'The :field should only contain letters',
-        'alpha_numeric': 'The :field should only contain letters or numbers',
-        'alpha_dashes': 'The :field should only contain letters or dashes',
-        'digit': 'The :field should only contain a digit',
-        'integer': 'The :field should only contain an integer',
-        'decimal': 'The :field should contain a valid decimal number',
-        'numeric': 'The :field should contain a number',
-        'range': 'The :field should contain a number between :param1 and :param2',
-        'color': 'The :field should contain a valid color',
-        'matches': 'The :field should match the field :param1',
-        'validation_function_not_found': 'The rule :rule has not been defined'
-
-    };
+    var validationMessages = new I18n({
+        en_US: {
+            'formvalidator.required' : 'The {field} filling is mandatory',
+            'formvalidator.min_length': 'The {field} must have a minimum size of {param1} characters',
+            'formvalidator.max_length': 'The {field} must have a maximum size of {param1} characters',
+            'formvalidator.exact_length': 'The {field} must have an exact size of {param1} characters',
+            'formvalidator.email': 'The {field} must have a valid e-mail address',
+            'formvalidator.url': 'The {field} must have a valid URL',
+            'formvalidator.ip': 'The {field} does not contain a valid {param1} IP address',
+            'formvalidator.phone': 'The {field} does not contain a valid {param1} phone number',
+            'formvalidator.credit_card': 'The {field} does not contain a valid {param1} credit card',
+            'formvalidator.date': 'The {field} should contain a date in the {param1} format',
+            'formvalidator.alpha': 'The {field} should only contain letters',
+            'formvalidator.text': 'The {field} should only contain alphabetic characters',
+            'formvalidator.latin': 'The {field} should only contain alphabetic characters',
+            'formvalidator.alpha_numeric': 'The {field} should only contain letters or numbers',
+            'formvalidator.alpha_dashes': 'The {field} should only contain letters or dashes',
+            'formvalidator.digit': 'The {field} should only contain a digit',
+            'formvalidator.integer': 'The {field} should only contain an integer',
+            'formvalidator.decimal': 'The {field} should contain a valid decimal number',
+            'formvalidator.numeric': 'The {field} should contain a number',
+            'formvalidator.range': 'The {field} should contain a number between {param1} and {param2}',
+            'formvalidator.color': 'The {field} should contain a valid color',
+            'formvalidator.matches': 'The {field} should match the field {param1}',
+            'formvalidator.validation_function_not_found': 'The rule {rule} has not been defined'
+        },
+        pt_PT: {
+            'formvalidator.required' : 'Preencher {field} é obrigatório',
+            'formvalidator.min_length': '{field} deve ter no mínimo {param1} caracteres',
+            'formvalidator.max_length': '{field} tem um tamanho máximo de {param1} caracteres',
+            'formvalidator.exact_length': '{field} devia ter exactamente {param1} caracteres',
+            'formvalidator.email': '{field} deve ser um e-mail válido',
+            'formvalidator.url': 'O {field} deve ser um URL válido',
+            'formvalidator.ip': '{field} não tem um endereço IP {param1} válido',
+            'formvalidator.phone': '{field} deve ser preenchido com um número de telefone {param1} válido.',
+            'formvalidator.credit_card': '{field} não tem um cartão de crédito {param1} válido',
+            'formvalidator.date': '{field} deve conter uma data no formato {param1}',
+            'formvalidator.alpha': 'O campo {field} deve conter apenas caracteres alfabéticos',
+            'formvalidator.text': 'O campo {field} deve conter apenas caracteres alfabéticos',
+            'formvalidator.latin': 'O campo {field} deve conter apenas caracteres alfabéticos',
+            'formvalidator.alpha_numeric': '{field} deve conter apenas letras e números',
+            'formvalidator.alpha_dashes': '{field} deve conter apenas letras e traços',
+            'formvalidator.digit': '{field} destina-se a ser preenchido com apenas um dígito',
+            'formvalidator.integer': '{field} deve conter um número inteiro',
+            'formvalidator.decimal': '{field} deve conter um número válido',
+            'formvalidator.numeric': '{field} deve conter um número válido',
+            'formvalidator.range': '{field} deve conter um número entre {param1} e {param2}',
+            'formvalidator.color': '{field} deve conter uma cor válida',
+            'formvalidator.matches': '{field} deve corresponder ao campo {param1}',
+            'formvalidator.validation_function_not_found': '[A regra {rule} não foi definida]'
+        },
+    }, 'en_US');
 
     /**
      * Constructor of a FormElement.
@@ -354,7 +399,6 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
      * @return {FormElement} FormElement object
      */
     var FormElement = function( element, options ){
-
         this._element = Aux.elOrSelector( element, 'Invalid FormElement' );
         this._errors = {};
         this._rules = {};
@@ -404,7 +448,6 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @private
          */
         _parseRules: function( rules ){
-
             this._rules = {};
             rules = rules.split("|");
             var i, rulesLength = rules.length, rule, params, paramStartPos ;
@@ -420,8 +463,13 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
                         params = params.split(']');
                         params = params[0];
                         params = params.split(',');
+                        for (var p = 0, len = params.length; p < len; p++) {
+                            params[p] =
+                                params[p] === 'true' ? true :
+                                params[p] === 'false' ? false :
+                                params[p];
+                        }
                         params.splice(0,0,this.getValue());
-                        params.push(this._options.form._formElements);
 
                         rule = rule.substr(0,paramStartPos);
 
@@ -440,26 +488,28 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * Then it replaces some tokens in the message for a more 'custom' reading
          *
          * @method _addError
-         * @param  {String} rule    Rule that failed
-         * @param  {String} message Message from the validationMessages object.
+         * @param  {String|null} rule    Rule that failed, or null if no rule was found.
          * @private
          * @static
          */
-        _addError: function(rule, message ){
+        _addError: function(rule){
+            var params = this._rules[rule] || [];
 
-            var params, paramsLength;
+            var paramObj = {
+                field: this._options.label,
+                value: this.getValue()
+            };
 
-            if( rule in this._rules ){
-                params = this._rules[rule];
-            } else {
-                params = [];
+            for( var i = 1; i < params.length; i++ ){
+                paramObj['param' + i] = params[i];
             }
-            paramsLength = params.length;
 
-            this._errors[rule] = message;
-            this._errors[rule] = this._errors[rule].replace(':field',this._options.label).replace(':value',this.getValue()).replace(':rule',rule);
-            for( var i = 1; i < paramsLength; i++ ){
-                this._errors[rule] = this._errors[rule].replace(':param'+(i), params[i]);
+            var i18nKey = 'formvalidator.' + rule;
+
+            this._errors[rule] = validationMessages.text(i18nKey, paramObj);
+
+            if (this._errors[rule] === i18nKey) {
+                this._errors[rule] = 'Validation message not found';
             }
         },
 
@@ -518,6 +568,17 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
         },
 
         /**
+         * Get other elements in the same form.
+         *
+         * @method getFormElements
+         * @return {Object} A mapping of keys to other elements in this form.
+         * @public
+         */
+        getFormElements: function () {
+            return this._options.form._formElements;
+        },
+
+        /**
          * Function used to validate the element based on the rules defined.
          * It parses the rules defined in the _options.rules property.
          *
@@ -526,32 +587,29 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @public
          */
         validate: function(){
-
             this._errors = {};
 
-            if( "rules" in this._options ){
+            if( "rules" in this._options || 1){
                 this._parseRules( this._options.rules );
             }
 
             if( ("required" in this._rules) || (this.getValue() !== '') ){
                 for(var rule in this._rules){
 
-                    if( this._rules.hasOwnProperty( rule ) && (typeof validationFunctions[rule] === 'function') ){
-
+                if (this._rules.hasOwnProperty(rule)) {
+                    if( (typeof validationFunctions[rule] === 'function') ){
                         if( validationFunctions[rule].apply(this, this._rules[rule] ) === false ){
 
-                            this._addError( rule, validationMessages[rule] || 'Error message not defined' );
+                            this._addError( rule );
                             return false;
 
                         }
 
                     } else {
 
-                        this._addError( rule, validationMessages['validation_function_not_found'] );
+                        this._addError( null );
                         return false;
-
                     }
-
                 }
             }
 
@@ -563,10 +621,8 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
 
 
     /**
-     * @class Ink.UI.FormValidator
+     * @class Ink.UI.FormValidator_2
      * @version 2
-     * @uses Ink.Dom.Css
-     * @uses Ink.Util.Validator
      * @constructor
      * @param {String|DOMElement} selector Either a CSS Selector string, or the form's DOMElement
      * @param {} [varname] [description]
@@ -624,14 +680,59 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
      *
      * @method setRule
      * @param {String}   name         Name of the function. E.g. 'required'
-     * @param {String}   errorMessage Error message to be displayed in case of returning false. E.g. 'Oops, you passed :param1 as parameter1, lorem ipsum dolor...'
+     * @param {String}   errorMessage Error message to be displayed in case of returning false. E.g. 'Oops, you passed {param1} as parameter1, lorem ipsum dolor...'
      * @param {Function} cb           Function to be executed when calling this rule
      * @public
      * @static
      */
     FormValidator.setRule = function( name, errorMessage, cb ){
         validationFunctions[ name ] = cb;
-        validationMessages[ name ] = errorMessage;
+        if (validationMessages.getKey('formvalidator.' + name) !== errorMessage) {
+            var langObj = {}; langObj['formvalidator.' + name] = errorMessage;
+            var dictObj = {}; dictObj[validationMessages.lang()] = langObj;
+            validationMessages.append(dictObj);
+        }
+    };
+
+    /**
+     * Get the i18n object in charge of the error messages
+     *
+     * @method getI18n
+     * @return {Ink.Util.I18n} The i18n object the FormValidator is using.
+     */
+    FormValidator.getI18n = function () {
+        return validationMessages;
+    };
+
+     /**
+     * Sets the I18n object for validation error messages
+     *
+     * @method setI18n
+     * @param {Ink.Util.I18n} i18n  The I18n object.
+     */
+    FormValidator.setI18n = function (i18n) {
+        validationMessages = i18n;
+    };
+
+   /**
+     * Add to the I18n dictionary. See `Ink.Util.I18n.append()` documentation.
+     *
+     * @method AppendI18n
+     */
+    FormValidator.appendI18n = function () {
+        validationMessages.append.apply(validationMessages, [].slice.call(arguments));
+    };
+
+    /**
+     * Sets the language of the error messages. pt_PT and en_US are available, but you can add new languages by using append()
+     *
+     * See the `Ink.Util.I18n.lang()` setter
+     *
+     * @method setLanguage
+     * @param language  The language to set i18n to.
+     */
+    FormValidator.setLanguage = function (language) {
+        validationMessages.lang(language);
     };
 
     /**
@@ -723,9 +824,9 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
             for( var key in this._formElements ){
                 if( this._formElements.hasOwnProperty(key) ){
                     for( var counter = 0; counter < this._formElements[key].length; counter+=1 ){
-                         if( !this._formElements[key][counter].validate() ) {
+                        if( !this._formElements[key][counter].validate() ) {
                             errorElements.push(this._formElements[key][counter]);
-                         }
+                        }
                     }
                 }
             }
