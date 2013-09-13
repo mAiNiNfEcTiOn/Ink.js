@@ -324,8 +324,8 @@ Ink.createModule('Ink.UI.Table', '1', ['Ink.Net.Ajax_1','Ink.UI.Aux_1','Ink.Dom.
         _sort: function( index ){
             this._data.sort(Ink.bind(function(a,b){
                 var
-                    aValue = Selector.select('td',a)[index].innerText,
-                    bValue = Selector.select('td',b)[index].innerText
+                    aValue = Element.textContent(Selector.select('td',a)[index]),
+                    bValue = Element.textContent(Selector.select('td',b)[index])
                 ;
 
                 var regex = new RegExp(/\d/g);
@@ -382,7 +382,7 @@ Ink.createModule('Ink.UI.Table', '1', ['Ink.Net.Ajax_1','Ink.UI.Aux_1','Ink.Dom.
                     }
 
                     if( ("label" in header) ){
-                        th.innerText = header.label;
+                        Element.setTextContent(th, header.label);
                     }
 
                     this._originalFields.push(field);
