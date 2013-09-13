@@ -431,7 +431,7 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
             var controlGroup = Element.findUpwardsByClass(this._element,'control-group');
             var label = Ink.s('label',controlGroup);
             if( label ){
-                label = label.innerHTML;
+                label = Element.textContent(label);
             } else {
                 label = this._element.name || this._element.id || '';
             }
@@ -650,6 +650,20 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
         this._formElements = {};
 
         /**
+         * Error message DOMElements
+         * 
+         * @property _errorMessages
+         */
+        this._errorMessages = [];
+
+        /**
+         * Array of elements marked with validation errors
+         *
+         * @property _markedErrorElements
+         */
+        this._markedErrorElements = [];
+
+        /**
          * Configuration options. Fetches the data attributes first, then the ones passed when executing the constructor.
          * By doing that, the latter will be the one with highest priority.
          *
@@ -658,7 +672,7 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          */
         this._options = Ink.extendObj({
             eventTrigger: 'submit',
-            searchFor: 'input, select, textarea',
+            searchFor: 'input, select, textarea, .control-group',
             beforeValidation: undefined,
             onError: undefined,
             onSuccess: undefined
@@ -830,7 +844,7 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
                     }
                 }
             }
-
+            
             if( errorElements.length === 0 ){
                 if( typeof this._options.onSuccess === 'function' ){
                     this._options.onSuccess();
@@ -840,6 +854,42 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
                 if( typeof this._options.onError === 'function' ){
                     this._options.onError( errorElements );
                 }
+                InkArray.each( this._markedErrorElements, Ink.bind(Css.removeClassName, Css, 'validation'));
+                InkArray.each( this._markedErrorElements, Ink.bind(Css.removeClassName, Css, 'error'));
+                InkArray.each( this._errorMessages, Element.remove);
+                this._errorMessages = [];
+                this._markedErrorElements = [];
+                InkArray.each( errorElements, Ink.bind(function( formElement ){
+                    var controlGroupElement;
+                    var controlElement;
+                    if( Css.hasClassName(formElement.getElement(),'control-group') ){
+                        controlGroupElement = formElement.getElement();
+                        controlElement = Ink.s('.control',formElement.getElement());
+                    } else {
+                        controlGroupElement = Element.findUpwardsByClass(formElement.getElement(),'control-group');
+                        controlElement = Element.findUpwardsByClass(formElement.getElement(),'control');
+                    }
+                    if (!controlElement || !controlGroupElement) {
+                        controlElement = controlGroupElement = formElement.getElement();
+                    }
+
+                    Css.addClassName( controlGroupElement, 'validation' );
+                    Css.addClassName( controlGroupElement, 'error' );
+                    this._markedErrorElements.push(controlGroupElement);
+
+                    var paragraph = document.createElement('p');
+                    Css.addClassName(paragraph,'tip');
+                    Element.insertAfter(paragraph, controlElement);
+                    var errors = formElement.getErrors();
+                    var errorArr = [];
+                    for (var k in errors) {
+                        if (errors.hasOwnProperty(k)) {
+                            errorArr.push(errors[k]);
+                        }
+                    }
+                    paragraph.innerHTML = errorArr.join('<br/>');
+                    this._errorMessages.push(paragraph);
+                }, this));
                 return false;
             }
         }

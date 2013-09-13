@@ -119,38 +119,13 @@
                         searchFor: 'input, select, textarea, div.control-group',
 
                         beforeValidation: function(){
-                            var controlGroups = Selector.select( '.control-group.validation.error', this._rootElement );
-                            InkArray.each(controlGroups, function( element, index, arr ){
-                                Css.removeClassName(element, 'validation');
-                                Css.removeClassName(element, 'error');
-                                InkArray.each( Selector.select('.tip',element), function( tip, index2, arr2 ){
-                                    Element.remove(tip);
-                                });
-                            })
+
                         },
                         onSuccess: function(){
                             console.log("LOL");
                         },
                         onError: function( elements ){
-                            InkArray.each( elements, function( formElement, index, arr ){
-                                if( Css.hasClassName(formElement.getElement(),'control-group') ){
-                                    var controlGroupElement = formElement.getElement();
-                                    var controlElement = Ink.s('.control',formElement.getElement());
-                                } else {
-                                    var controlGroupElement = Element.findUpwardsByClass(formElement.getElement(),'control-group');
-                                    var controlElement = Element.findUpwardsByClass(formElement.getElement(),'control');
-                                }
-                                Css.addClassName( controlGroupElement, 'validation' );
-                                Css.addClassName( controlGroupElement, 'error' );
-                                var paragraph = document.createElement('p');
-                                Css.addClassName(paragraph,'tip');
-                                var errors = formElement.getErrors();
-                                for( var key in errors ){
-                                    paragraph.innerHTML += errors[key] + '<br/>';
-                                }
 
-                                Element.insertAfter(paragraph, controlElement);
-                            })
                         }
                     });
                 });
