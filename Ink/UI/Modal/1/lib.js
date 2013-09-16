@@ -113,7 +113,8 @@ Ink.createModule('Ink.UI.Modal', '1', ['Ink.UI.Aux_1','Ink.Dom.Event_1','Ink.Dom
             onDismiss:    undefined,
             closeOnClick: false,
             responsive:    true,
-            disableScroll: true
+            disableScroll: true,
+            forceSize: false
         };
 
 
@@ -225,7 +226,7 @@ Ink.createModule('Ink.UI.Modal', '1', ['Ink.UI.Aux_1','Ink.Dom.Event_1','Ink.Dom
 
         /**
          * Responsible for repositioning the modal
-         * 
+         *
          * @method _reposition
          * @private
          */
@@ -239,7 +240,7 @@ Ink.createModule('Ink.UI.Modal', '1', ['Ink.UI.Aux_1','Ink.Dom.Event_1','Ink.Dom
 
         /**
          * Responsible for resizing the modal
-         * 
+         *
          * @method _onResize
          * @param {Boolean|Event} runNow Its executed in the begining to resize/reposition accordingly to the viewport. But usually it's an event object.
          * @private
@@ -255,7 +256,7 @@ Ink.createModule('Ink.UI.Modal', '1', ['Ink.UI.Aux_1','Ink.Dom.Event_1','Ink.Dom
 
         /**
          * Timeout Resize Function
-         * 
+         *
          * @method _timeoutResizeFunction
          * @private
          */
@@ -268,6 +269,16 @@ Ink.createModule('Ink.UI.Modal', '1', ['Ink.UI.Aux_1','Ink.Dom.Event_1','Ink.Dom
                 currentViewportHeight = parseInt(elem.clientHeight,10),
                 currentViewportWidth = parseInt(elem.clientWidth,10)
             ;
+
+            if( (isNaN(this.originalStatus.width) || (this._options.forceSize.toString() === "true")) && (this._options.width.indexOf("%") !== -1) ){
+                this.originalStatus.width = currentViewportWidth*(parseInt(this._options.width,10)/100) ;
+                this._modalDivStyle.maxWidth = this.originalStatus.width + 'px';
+            }
+
+            if( (isNaN(this.originalStatus.height) || (this._options.forceSize.toString() === "true")) && (this._options.height.indexOf("%") !== -1) ){
+                this.originalStatus.height = currentViewportHeight*(parseInt(this._options.height,10)/100) ;
+                this._modalDivStyle.maxHeight = this.originalStatus.height + 'px';
+            }
 
             if( ( currentViewportWidth > this.originalStatus.width ) /* && ( parseInt(this._modalDivStyle.maxWidth,10) >= Element.elementWidth(this._modalDiv) )*/ ){
                 /**
@@ -305,7 +316,7 @@ Ink.createModule('Ink.UI.Modal', '1', ['Ink.UI.Aux_1','Ink.Dom.Event_1','Ink.Dom
 
         /**
          * Navigation click handler
-         * 
+         *
          * @method _onClick
          * @param {Event} ev
          * @private
@@ -319,7 +330,7 @@ Ink.createModule('Ink.UI.Modal', '1', ['Ink.UI.Aux_1','Ink.Dom.Event_1','Ink.Dom
                     (!Element.descendantOf(this._shadeElement, tgtEl) || (tgtEl === this._shadeElement))
                 )
             ) {
-                var 
+                var
                     alertsInTheModal = Selector.select('.ink-alert',this._shadeElement),
                     alertsLength = alertsInTheModal.length
                 ;
@@ -348,7 +359,7 @@ Ink.createModule('Ink.UI.Modal', '1', ['Ink.UI.Aux_1','Ink.Dom.Event_1','Ink.Dom
 
         /**
          * Responsible for setting the size of the modal (and position) based on the viewport.
-         * 
+         *
          * @method _resizeContainer
          * @private
          */
@@ -384,7 +395,7 @@ Ink.createModule('Ink.UI.Modal', '1', ['Ink.UI.Aux_1','Ink.Dom.Event_1','Ink.Dom
 
         /**
          * Responsible for 'disabling' the page scroll
-         * 
+         *
          * @method _disableScroll
          * @private
          */
@@ -409,7 +420,7 @@ Ink.createModule('Ink.UI.Modal', '1', ['Ink.UI.Aux_1','Ink.Dom.Event_1','Ink.Dom
 
         /**
          * Display this Modal. Useful if you have initialized the modal
-         * @method open 
+         * @method open
          * @param {Event} [event] (internal) In case its fired by the internal trigger.
          */
         open: function(event) {
@@ -506,7 +517,7 @@ Ink.createModule('Ink.UI.Modal', '1', ['Ink.UI.Aux_1','Ink.Dom.Event_1','Ink.Dom
 
         /**
          * Dismisses the modal
-         * 
+         *
          * @method dismiss
          * @public
          */
@@ -570,7 +581,7 @@ Ink.createModule('Ink.UI.Modal', '1', ['Ink.UI.Aux_1','Ink.Dom.Event_1','Ink.Dom
 
         /**
          * Removes the modal from the DOM
-         * 
+         *
          * @method destroy
          * @public
          */
@@ -581,7 +592,7 @@ Ink.createModule('Ink.UI.Modal', '1', ['Ink.UI.Aux_1','Ink.Dom.Event_1','Ink.Dom
 
         /**
          * Returns the content DOM element
-         * 
+         *
          * @method getContentElement
          * @return {DOMElement} Modal main cointainer.
          * @public
@@ -592,7 +603,7 @@ Ink.createModule('Ink.UI.Modal', '1', ['Ink.UI.Aux_1','Ink.Dom.Event_1','Ink.Dom
 
         /**
          * Replaces the content markup
-         * 
+         *
          * @method setContentMarkup
          * @param {String} contentMarkup
          * @public
@@ -617,7 +628,7 @@ Ink.createModule('Ink.UI.Modal', '1', ['Ink.UI.Aux_1','Ink.Dom.Event_1','Ink.Dom
                     InkArray.each(tempHeader,Ink.bind(function( element ){ this._modalDiv.appendChild(element); },this));
                     this._modalDiv.appendChild(body);
                     InkArray.each(tempFooter,Ink.bind(function( element ){ this._modalDiv.appendChild(element); },this));
-                    
+
                     this._contentContainer = Selector.select(".modal-body",this._modalDiv);
                 }
                 this._contentContainer = this._contentContainer[0];
