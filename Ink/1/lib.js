@@ -38,7 +38,9 @@
         /*jshint unused:false */
         if (typeof o !== 'object') { return false; }
         for (var k in o) {
-            return false;
+            if (o.hasOwnProperty(k)) {
+                return false;
+            }
         }
         return true;
     };
@@ -55,11 +57,13 @@
                 if (!o) { continue; }
 
                 for (dep in o.left) {
-                    mod = modules[dep];
-                    if (mod) {
-                        o.args[o.left[dep] ] = mod;
-                        delete o.left[dep];
-                        --o.remaining;
+                    if (o.left.hasOwnProperty(dep)) {
+                        mod = modules[dep];
+                        if (mod) {
+                            o.args[o.left[dep] ] = mod;
+                            delete o.left[dep];
+                            --o.remaining;
+                        }
                     }
                 }
 
