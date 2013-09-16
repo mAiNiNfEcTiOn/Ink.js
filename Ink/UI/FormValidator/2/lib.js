@@ -592,25 +592,25 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
             if( "rules" in this._options || 1){
                 this._parseRules( this._options.rules );
             }
+            
+            if( ("required" in this._rules) || (this.getValue() !== '') ){
+                for(var rule in this._rules) {
+                    if (this._rules.hasOwnProperty(rule)) {
+                        if( (typeof validationFunctions[rule] === 'function') ){
+                            if( validationFunctions[rule].apply(this, this._rules[rule] ) === false ){
 
-            for(var rule in this._rules){
+                                this._addError( rule );
+                                return false;
 
-                if (this._rules.hasOwnProperty(rule)) {
-                    if( (typeof validationFunctions[rule] === 'function') ){
-                        if( validationFunctions[rule].apply(this, this._rules[rule] ) === false ){
+                            }
 
-                            this._addError( rule );
+                        } else {
+
+                            this._addError( null );
                             return false;
-
                         }
-
-                    } else {
-
-                        this._addError( null );
-                        return false;
                     }
                 }
-
             }
 
             return true;
