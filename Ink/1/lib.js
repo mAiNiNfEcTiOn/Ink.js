@@ -364,6 +364,31 @@
         },
 
         /**
+         * Function.prototype.bind alternative for binding class methods
+         *
+         * @function bindMethod
+         * @param {Object}  object
+         * @param {String}  methodName
+         * @return {Function}
+         *  
+         * @example
+         *  // Build a function which calls Ink.Dom.Element.remove on an element.
+         *  var removeMyElem = Ink.bindMethod(Ink.Dom.Element, 'remove', someElement);
+         *
+         *  removeMyElem();  // no arguments, nor Ink.Dom.Element, needed
+         * @example
+         *  // (comparison with using Ink.bind to the same effect).
+         *  // The following two calls are equivalent
+         *
+         *  Ink.bind(this.remove, this, myElem);
+         *  Ink.bindMethod(this, 'remove', myElem);
+         */
+        bindMethod: function (object, methodName) {
+            return this.bind.apply(this,
+                [object[methodName], object].concat([].slice.call(arguments, 2)));
+        },
+
+        /**
          * Function.prototype.bind alternative for event handlers.
          * Same as bind but keeps first argument of the call the original event.
          * Additional arguments will be sent to the original function as prefix arguments.
