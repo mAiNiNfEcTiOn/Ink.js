@@ -1,9 +1,10 @@
+
 /**
  * @module Ink.UI.FormValidator_2
  * @author inkdev AT sapo.pt
  * @version 2
  */
-Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_1','Ink.Dom.Event_1','Ink.Dom.Selector_1','Ink.Dom.Css_1','Ink.Util.Array_1','Ink.Util.I18n_1','Ink.Util.Validator_1'], function( Aux, Element, Event, Selector, Css, InkArray, I18n, InkValidator ) {
+Ink.createModule('Ink.UI.FormValidator', '2', ['Ink.UI.Aux_1', 'Ink.Dom.Element_1', 'Ink.Dom.Event_1', 'Ink.Dom.Selector_1', 'Ink.Dom.Css_1', 'Ink.Util.Array_1', 'Ink.Util.I18n_1', 'Ink.Util.Validator_1'], function(Aux, Element, Event, Selector, Css, InkArray, I18n, InkValidator) {
     'use strict';
 
     /**
@@ -22,9 +23,8 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @method validationFunctions.required
          * @param  {String} value Value to be checked
          * @return {Boolean}       True case is defined, false if it's empty or not defined.
-         */
-        'required': function( value ){
-            return ( (typeof value !== 'undefined') && ( !(/^\s*$/).test(value) ) );
+         */'required': function(value) {
+            return ((typeof value !== 'undefined') && (!(/^\s*$/).test(value)));
         },
 
         /**
@@ -34,9 +34,8 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @param  {String} value   Value to be checked
          * @param  {String|Number} minSize Number of characters that the value at least must have.
          * @return {Boolean}         True if the length of value is equal or bigger than the minimum chars defined. False if not.
-         */
-        'min_length': function( value, minSize ){
-            return ( (typeof value === 'string') && ( value.length >= parseInt(minSize,10) ) );
+         */'min_length': function(value, minSize) {
+            return ((typeof value === 'string') && (value.length >= parseInt(minSize, 10)));
         },
 
         /**
@@ -46,9 +45,8 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @param  {String} value   Value to be checked
          * @param  {String|Number} maxSize Number of characters that the value at maximum can have.
          * @return {Boolean}         True if the length of value is equal or smaller than the maximum chars defined. False if not.
-         */
-        'max_length': function( value, maxSize ){
-            return ( (typeof value === 'string') && ( value.length <= parseInt(maxSize,10) ) );
+         */'max_length': function(value, maxSize) {
+            return ((typeof value === 'string') && (value.length <= parseInt(maxSize, 10)));
         },
 
         /**
@@ -58,9 +56,8 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @param  {String} value   Value to be checked
          * @param  {String|Number} exactSize Number of characters that the value must have.
          * @return {Boolean}         True if the length of value is equal to the size defined. False if not.
-         */
-        'exact_length': function( value, exactSize ){
-            return ( (typeof value === 'string') && ( value.length === parseInt(exactSize,10) ) );
+         */'exact_length': function(value, exactSize) {
+            return ((typeof value === 'string') && (value.length === parseInt(exactSize, 10)));
         },
 
         /**
@@ -69,9 +66,8 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @method validationFunctions.email
          * @param  {String} value   Value to be checked
          * @return {Boolean}         True if the value is a valid e-mail address. False if not.
-         */
-        'email': function( value ){
-            return ( ( typeof value === 'string' ) && InkValidator.mail( value ) );
+         */'email': function(value) {
+            return ((typeof value === 'string') && InkValidator.mail(value));
         },
 
         /**
@@ -81,10 +77,9 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @param  {String} value   Value to be checked
          * @param  {Boolean} fullCheck Flag that specifies if the value must be validated as a full url (with the protocol) or not.
          * @return {Boolean}         True if the URL is considered valid. False if not.
-         */
-        'url': function( value, fullCheck ){
+         */'url': function(value, fullCheck) {
             fullCheck = fullCheck || false;
-            return ( (typeof value === 'string') && InkValidator.url( value, fullCheck ) );
+            return ((typeof value === 'string') && InkValidator.url(value, fullCheck));
         },
 
         /**
@@ -94,9 +89,8 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @param  {String} value   Value to be checked
          * @param  {String} ipType Type of IP to be validated. The values are: ipv4, ipv6. By default is ipv4.
          * @return {Boolean}         True if the value is a valid IP address. False if not.
-         */
-        'ip': function( value, ipType ){
-            if( typeof value !== 'string' ){
+         */'ip': function(value, ipType) {
+            if (typeof value !== 'string') {
                 return false;
             }
 
@@ -110,9 +104,8 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @param  {String} value   Value to be checked
          * @param  {String} phoneType Country's initials to specify the type of phone number to be validated. Ex: 'AO'.
          * @return {Boolean}         True if it's a valid phone number. False if not.
-         */
-        'phone': function( value, phoneType ){
-            if( typeof value !== 'string' ){
+         */'phone': function(value, phoneType) {
+            if (typeof value !== 'string') {
                 return false;
             }
 
@@ -128,13 +121,12 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @param  {String} value   Value to be checked
          * @param  {String} cardType Type of credit card to be validated. The card types available are in the Ink.Util.Validator class.
          * @return {Boolean}         True if the value is a valid credit card number. False if not.
-         */
-        'credit_card': function( value, cardType ){
-            if( typeof value !== 'string' ){
+         */'credit_card': function(value, cardType) {
+            if (typeof value !== 'string') {
                 return false;
             }
 
-            return InkValidator.isCreditCard( value, cardType || 'default' );
+            return InkValidator.isCreditCard(value, cardType || 'default');
         },
 
         /**
@@ -144,9 +136,8 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @param  {String} value   Value to be checked
          * @param  {String} format Specific format of the date.
          * @return {Boolean}         True if the value is a valid date. False if not.
-         */
-        'date': function( value, format ){
-            return ( (typeof value === 'string' ) && InkValidator.isDate(format, value) );
+         */'date': function(value, format) {
+            return ((typeof value === 'string') && InkValidator.isDate(format, value));
         },
 
         /**
@@ -156,9 +147,10 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @param  {String} value           Value to be checked
          * @param  {Boolean} supportSpaces  Allow whitespace
          * @return {Boolean}                True if the value is alphabetical-only. False if not.
-         */
-        'alpha': function( value, supportSpaces ){
-            return InkValidator.ascii(value, {singleLineWhitespace: supportSpaces});
+         */'alpha': function(value, supportSpaces) {
+            return InkValidator.ascii(value, {
+                singleLineWhitespace: supportSpaces
+            });
         },
 
         /*
@@ -169,15 +161,15 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @method validationFunctions.text
          * @param {String} value    Value to be checked
          * @return {Boolean}        Whether the value only contains printable text characters
-         **/
-        'text': function (value, whitespace, punctuation) {
+         **/'text': function(value, whitespace, punctuation) {
             return InkValidator.unicode(value, {
                 singleLineWhitespace: whitespace,
-                unicodePunctuation: punctuation});
+                unicodePunctuation: punctuation
+            });
         },
 
         /*
-         * Check that the value contains only printable text characters 
+         * Check that the value contains only printable text characters
          * available in the latin-1 encoding.
          *
          * Optionally allow punctuation and whitespace
@@ -185,10 +177,14 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @method validationFunctions.text
          * @param {String} value    Value to be checked
          * @return {Boolean}        Whether the value only contains printable text characters
-         **/
-        'latin': function (value, punctuation, whitespace) {
-            if ( typeof value !== 'string') { return false; }
-            return InkValidator.latin1(value, {latin1Punctuation: punctuation, singleLineWhitespace: whitespace});
+         **/'latin': function(value, punctuation, whitespace) {
+            if (typeof value !== 'string') {
+                return false;
+            }
+            return InkValidator.latin1(value, {
+                latin1Punctuation: punctuation,
+                singleLineWhitespace: whitespace
+            });
         },
 
         /**
@@ -197,9 +193,10 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @method validationFunctions.alpha_numeric
          * @param  {String} value   Value to be checked
          * @return {Boolean}         True if the value is a valid alphanumerical. False if not.
-         */
-        'alpha_numeric': function( value ){
-            return InkValidator.ascii(value, {numbers: true});
+         */'alpha_numeric': function(value) {
+            return InkValidator.ascii(value, {
+                numbers: true
+            });
         },
 
         /**
@@ -208,9 +205,11 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @method validationFunctions.alpha_dashes
          * @param  {String} value   Value to be checked
          * @return {Boolean}         True if the value is a valid. False if not.
-         */
-        'alpha_dash': function( value ){
-            return InkValidator.ascii(value, {dash: true, underscore: true});
+         */'alpha_dash': function(value) {
+            return InkValidator.ascii(value, {
+                dash: true,
+                underscore: true
+            });
         },
 
         /**
@@ -219,8 +218,7 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @method validationFunctions.digit
          * @param  {String} value   Value to be checked
          * @return {Boolean}         True if the value is a valid digit. False if not.
-         */
-        'digit': function( value ){
+         */'digit': function(value) {
             return ((typeof value === 'string') && /^[0-9]{1}$/.test(value));
         },
 
@@ -231,8 +229,7 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @param  {String} value   Value to be checked
          * @param  {String} positive Flag that specifies if the integer is must be positive (unsigned).
          * @return {Boolean}         True if the value is a valid integer. False if not.
-         */
-        'integer': function( value, positive ){
+         */'integer': function(value, positive) {
             return InkValidator.number(value, {
                 negative: !positive,
                 decimalPlaces: 0
@@ -248,8 +245,7 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @param  {String} [decimalPlaces] Maximum number of digits that the decimal part must have.
          * @param  {String} [leftDigits] Maximum number of digits that the integer part must have, when provided.
          * @return {Boolean}         True if the value is a valid decimal number. False if not.
-         */
-        'decimal': function( value, decimalSeparator, decimalPlaces, leftDigits ){
+         */'decimal': function(value, decimalSeparator, decimalPlaces, leftDigits) {
             return InkValidator.number(value, {
                 decimalSep: decimalSeparator || '.',
                 decimalPlaces: +decimalPlaces || null,
@@ -266,13 +262,12 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @param  {String} [decimalPlaces] (when the number is decimal) Maximum number of digits that the decimal part must have.
          * @param  {String} [leftDigits] (when the number is decimal) Maximum number of digits that the integer part must have, when provided.
          * @return {Boolean}         True if the value is numeric. False if not.
-         */
-        'numeric': function( value, decimalSeparator, decimalPlaces, leftDigits ){
+         */'numeric': function(value, decimalSeparator, decimalPlaces, leftDigits) {
             decimalSeparator = decimalSeparator || '.';
-            if( value.indexOf(decimalSeparator) !== -1  ){
-                return validationFunctions.decimal( value, decimalSeparator, decimalPlaces, leftDigits );
+            if (value.indexOf(decimalSeparator) !== -1) {
+                return validationFunctions.decimal(value, decimalSeparator, decimalPlaces, leftDigits);
             } else {
-                return validationFunctions.integer( value );
+                return validationFunctions.integer(value);
             }
         },
 
@@ -285,8 +280,7 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @param  {String} maxValue Right limit of the range.
          * @param  {String} [multipleOf] In case you want numbers that are only multiples of another number.
          * @return {Boolean}         True if the value is within the range. False if not.
-         */
-        'range': function( value, minValue, maxValue, multipleOf ){
+         */'range': function(value, minValue, maxValue, multipleOf) {
             value = +value;
             minValue = +minValue;
             maxValue = +maxValue;
@@ -295,7 +289,7 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
                 return false;
             }
 
-            if( value < minValue || value > maxValue ){
+            if (value < minValue || value > maxValue) {
                 return false;
             }
 
@@ -312,8 +306,7 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @method validationFunctions.color
          * @param  {String} value   Value to be checked
          * @return {Boolean}         True if the value is a valid color. False if not.
-         */
-        'color': function( value ){
+         */'color': function(value) {
             return InkValidator.isColor(value);
         },
 
@@ -324,9 +317,8 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @param  {String} value   Value to be checked
          * @param  {String} fieldToCompare Name or ID of the field to compare.
          * @return {Boolean}         True if the values match. False if not.
-         */
-        'matches': function( value, fieldToCompare ){
-            return ( value === this.getFormElements()[fieldToCompare][0].getValue() );
+         */'matches': function(value, fieldToCompare) {
+            return (value === this.getFormElements()[fieldToCompare][0].getValue());
         }
 
     };
@@ -339,7 +331,7 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
      */
     var validationMessages = new I18n({
         en_US: {
-            'formvalidator.required' : 'The {field} filling is mandatory',
+            'formvalidator.required': 'The {field} filling is mandatory',
             'formvalidator.min_length': 'The {field} must have a minimum size of {param1} characters',
             'formvalidator.max_length': 'The {field} must have a maximum size of {param1} characters',
             'formvalidator.exact_length': 'The {field} must have an exact size of {param1} characters',
@@ -364,7 +356,7 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
             'formvalidator.validation_function_not_found': 'The rule {rule} has not been defined'
         },
         pt_PT: {
-            'formvalidator.required' : 'Preencher {field} é obrigatório',
+            'formvalidator.required': 'Preencher {field} é obrigatório',
             'formvalidator.min_length': '{field} deve ter no mínimo {param1} caracteres',
             'formvalidator.max_length': '{field} tem um tamanho máximo de {param1} caracteres',
             'formvalidator.exact_length': '{field} devia ter exactamente {param1} caracteres',
@@ -398,17 +390,17 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
      * @param  {Object} options Object with configuration options
      * @return {FormElement} FormElement object
      */
-    var FormElement = function( element, options ){
-        this._element = Aux.elOrSelector( element, 'Invalid FormElement' );
+    var FormElement = function(element, options) {
+        this._element = Aux.elOrSelector(element, 'Invalid FormElement');
         this._errors = {};
         this._rules = {};
         this._value = null;
 
-        this._options = Ink.extendObj( {
+        this._options = Ink.extendObj({
             label: this._getLabel()
-        }, Element.data(this._element) );
+        }, Element.data(this._element));
 
-        this._options = Ink.extendObj( this._options, options || {} );
+        this._options = Ink.extendObj(this._options, options || {});
 
     };
 
@@ -426,12 +418,12 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @return {String} Label to be used in the error messages
          * @private
          */
-        _getLabel: function(){
+        _getLabel: function() {
 
-            var controlGroup = Element.findUpwardsByClass(this._element,'control-group');
-            var label = Ink.s('label',controlGroup);
-            if( label ){
-                label = label.innerHTML;
+            var controlGroup = Element.findUpwardsByClass(this._element, 'control-group');
+            var label = Ink.s('label', controlGroup);
+            if (label) {
+                label = Element.textContent(label);
             } else {
                 label = this._element.name || this._element.id || '';
             }
@@ -447,31 +439,29 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @param  {String} rules String with the rules
          * @private
          */
-        _parseRules: function( rules ){
+        _parseRules: function(rules) {
             this._rules = {};
             rules = rules.split("|");
-            var i, rulesLength = rules.length, rule, params, paramStartPos ;
-            if( rulesLength > 0 ){
-                for( i = 0; i < rulesLength; i++ ){
+            var i, rulesLength = rules.length,
+                rule, params, paramStartPos;
+            if (rulesLength > 0) {
+                for (i = 0; i < rulesLength; i++) {
                     rule = rules[i];
-                    if( !rule ){
+                    if (!rule) {
                         continue;
                     }
 
-                    if( ( paramStartPos = rule.indexOf('[') ) !== -1 ){
-                        params = rule.substr( paramStartPos+1 );
+                    if ((paramStartPos = rule.indexOf('[')) !== -1) {
+                        params = rule.substr(paramStartPos + 1);
                         params = params.split(']');
                         params = params[0];
                         params = params.split(',');
                         for (var p = 0, len = params.length; p < len; p++) {
-                            params[p] =
-                                params[p] === 'true' ? true :
-                                params[p] === 'false' ? false :
-                                params[p];
+                            params[p] = params[p] === 'true' ? true : params[p] === 'false' ? false : params[p];
                         }
-                        params.splice(0,0,this.getValue());
+                        params.splice(0, 0, this.getValue());
 
-                        rule = rule.substr(0,paramStartPos);
+                        rule = rule.substr(0, paramStartPos);
 
                         this._rules[rule] = params;
                     } else {
@@ -492,7 +482,7 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @private
          * @static
          */
-        _addError: function(rule){
+        _addError: function(rule) {
             var params = this._rules[rule] || [];
 
             var paramObj = {
@@ -500,7 +490,7 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
                 value: this.getValue()
             };
 
-            for( var i = 1; i < params.length; i++ ){
+            for (var i = 1; i < params.length; i++) {
                 paramObj['param' + i] = params[i];
             }
 
@@ -520,20 +510,20 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @return {mixed} The DOM Element's value
          * @public
          */
-        getValue: function(){
+        getValue: function() {
 
-            switch(this._element.nodeName.toLowerCase()){
+            switch (this._element.nodeName.toLowerCase()) {
                 case 'select':
-                    return Ink.s('option:selected',this._element).value;
+                    return Ink.s('option:selected', this._element).value;
                 case 'textarea':
                     return this._element.innerHTML;
                 case 'input':
-                    if( "type" in this._element ){
-                        if( (this._element.type === 'radio') && (this._element.type === 'checkbox') ){
-                            if( this._element.checked ){
+                    if ("type" in this._element) {
+                        if ((this._element.type === 'radio') && (this._element.type === 'checkbox')) {
+                            if (this._element.checked) {
                                 return this._element.value;
                             }
-                        } else if( this._element.type !== 'file' ){
+                        } else if (this._element.type !== 'file') {
                             return this._element.value;
                         }
                     } else {
@@ -552,7 +542,7 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @return {Object} Errors' object
          * @public
          */
-        getErrors: function(){
+        getErrors: function() {
             return this._errors;
         },
 
@@ -563,7 +553,7 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @return {Object} DOM Element
          * @public
          */
-        getElement: function(){
+        getElement: function() {
             return this._element;
         },
 
@@ -574,7 +564,7 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @return {Object} A mapping of keys to other elements in this form.
          * @public
          */
-        getFormElements: function () {
+        getFormElements: function() {
             return this._options.form._formElements;
         },
 
@@ -586,29 +576,29 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @return {Boolean} True if every rule was valid. False if one fails.
          * @public
          */
-        validate: function(){
+        validate: function() {
             this._errors = {};
 
-            if( "rules" in this._options || 1){
-                this._parseRules( this._options.rules );
+            if ("rules" in this._options || 1) {
+                this._parseRules(this._options.rules);
             }
 
-            if( ("required" in this._rules) || (this.getValue() !== '') ){
-                for(var rule in this._rules){
+            if (("required" in this._rules) || (this.getValue() !== '')) {
+                for (var rule in this._rules) {
+                    if (this._rules.hasOwnProperty(rule)) {
+                        if ((typeof validationFunctions[rule] === 'function')) {
+                            if (validationFunctions[rule].apply(this, this._rules[rule]) === false) {
 
-                if (this._rules.hasOwnProperty(rule)) {
-                    if( (typeof validationFunctions[rule] === 'function') ){
-                        if( validationFunctions[rule].apply(this, this._rules[rule] ) === false ){
+                                this._addError(rule);
+                                return false;
 
-                            this._addError( rule );
+                            }
+
+                        } else {
+
+                            this._addError(null);
                             return false;
-
                         }
-
-                    } else {
-
-                        this._addError( null );
-                        return false;
                     }
                 }
             }
@@ -631,7 +621,7 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
      *         var myValidator = new FormValidator( 'form' );
      *     });
      */
-    var FormValidator = function( selector, options ){
+    var FormValidator = function(selector, options) {
 
         /**
          * DOMElement of the <form> being validated
@@ -639,7 +629,7 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @property _rootElement
          * @type {DOMElement}
          */
-        this._rootElement = Aux.elOrSelector( selector );
+        this._rootElement = Aux.elOrSelector(selector);
 
         /**
          * Object that will gather the form elements by name
@@ -650,6 +640,20 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
         this._formElements = {};
 
         /**
+         * Error message DOMElements
+         *
+         * @property _errorMessages
+         */
+        this._errorMessages = [];
+
+        /**
+         * Array of elements marked with validation errors
+         *
+         * @property _markedErrorElements
+         */
+        this._markedErrorElements = [];
+
+        /**
          * Configuration options. Fetches the data attributes first, then the ones passed when executing the constructor.
          * By doing that, the latter will be the one with highest priority.
          *
@@ -658,18 +662,18 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          */
         this._options = Ink.extendObj({
             eventTrigger: 'submit',
-            searchFor: 'input, select, textarea',
+            searchFor: 'input, select, textarea, .control-group',
             beforeValidation: undefined,
             onError: undefined,
             onSuccess: undefined
-        },Element.data(this._rootElement));
+        }, Element.data(this._rootElement));
 
-        this._options = Ink.extendObj( this._options, options || {} );
+        this._options = Ink.extendObj(this._options, options || {});
 
         // Sets an event listener for a specific event in the form, if defined.
         // By default is the 'submit' event.
-        if( typeof this._options.eventTrigger === 'string' ){
-            Event.observe( this._rootElement,this._options.eventTrigger, Ink.bindEvent(this.validate,this) );
+        if (typeof this._options.eventTrigger === 'string') {
+            Event.observe(this._rootElement, this._options.eventTrigger, Ink.bindEvent(this.validate, this));
         }
 
         this._init();
@@ -685,11 +689,13 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
      * @public
      * @static
      */
-    FormValidator.setRule = function( name, errorMessage, cb ){
-        validationFunctions[ name ] = cb;
+    FormValidator.setRule = function(name, errorMessage, cb) {
+        validationFunctions[name] = cb;
         if (validationMessages.getKey('formvalidator.' + name) !== errorMessage) {
-            var langObj = {}; langObj['formvalidator.' + name] = errorMessage;
-            var dictObj = {}; dictObj[validationMessages.lang()] = langObj;
+            var langObj = {};
+            langObj['formvalidator.' + name] = errorMessage;
+            var dictObj = {};
+            dictObj[validationMessages.lang()] = langObj;
             validationMessages.append(dictObj);
         }
     };
@@ -700,26 +706,26 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
      * @method getI18n
      * @return {Ink.Util.I18n} The i18n object the FormValidator is using.
      */
-    FormValidator.getI18n = function () {
+    FormValidator.getI18n = function() {
         return validationMessages;
     };
 
-     /**
+    /**
      * Sets the I18n object for validation error messages
      *
      * @method setI18n
      * @param {Ink.Util.I18n} i18n  The I18n object.
      */
-    FormValidator.setI18n = function (i18n) {
+    FormValidator.setI18n = function(i18n) {
         validationMessages = i18n;
     };
 
-   /**
+    /**
      * Add to the I18n dictionary. See `Ink.Util.I18n.append()` documentation.
      *
      * @method AppendI18n
      */
-    FormValidator.appendI18n = function () {
+    FormValidator.appendI18n = function() {
         validationMessages.append.apply(validationMessages, [].slice.call(arguments));
     };
 
@@ -731,7 +737,7 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
      * @method setLanguage
      * @param language  The language to set i18n to.
      */
-    FormValidator.setLanguage = function (language) {
+    FormValidator.setLanguage = function(language) {
         validationMessages.lang(language);
     };
 
@@ -743,12 +749,12 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
      * @public
      * @static
      */
-    FormValidator.getRules = function(){
+    FormValidator.getRules = function() {
         return validationFunctions;
     };
 
     FormValidator.prototype = {
-        _init: function(){
+        _init: function() {
 
         },
 
@@ -760,17 +766,17 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @return {Object} An object with the elements in the form, indexed by name/id
          * @public
          */
-        getElements: function(){
+        getElements: function() {
             this._formElements = {};
-            var formElements = Selector.select( this._options.searchFor, this._rootElement );
-            if( formElements.length ){
+            var formElements = Selector.select(this._options.searchFor, this._rootElement);
+            if (formElements.length) {
                 var i, element;
-                for( i=0; i<formElements.length; i+=1 ){
+                for (i = 0; i < formElements.length; i += 1) {
                     element = formElements[i];
 
-                    var dataAttrs = Element.data( element );
+                    var dataAttrs = Element.data(element);
 
-                    if( !("rules" in dataAttrs) ){
+                    if (!("rules" in dataAttrs)) {
                         continue;
                     }
 
@@ -779,19 +785,19 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
                     };
 
                     var key;
-                    if( ("name" in element) && element.name ){
+                    if (("name" in element) && element.name) {
                         key = element.name;
-                    } else if( ("id" in element) && element.id ){
+                    } else if (("id" in element) && element.id) {
                         key = element.id;
                     } else {
-                        key = 'element_' + Math.floor(Math.random()*100);
+                        key = 'element_' + Math.floor(Math.random() * 100);
                         element.id = key;
                     }
 
-                    if( !(key in this._formElements) ){
-                        this._formElements[key] = [ new FormElement( element, options ) ];
+                    if (!(key in this._formElements)) {
+                        this._formElements[key] = [new FormElement(element, options)];
                     } else {
-                        this._formElements[key].push( new FormElement( element, options ) );
+                        this._formElements[key].push(new FormElement(element, options));
                     }
                 }
             }
@@ -810,10 +816,10 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
          * @return {Boolean}
          * @public
          */
-        validate: function( event ){
+        validate: function(event) {
             Event.stop(event);
 
-            if( typeof this._options.beforeValidation === 'function' ){
+            if (typeof this._options.beforeValidation === 'function') {
                 this._options.beforeValidation();
             }
 
@@ -821,25 +827,61 @@ Ink.createModule('Ink.UI.FormValidator', '2', [ 'Ink.UI.Aux_1','Ink.Dom.Element_
 
             var errorElements = [];
 
-            for( var key in this._formElements ){
-                if( this._formElements.hasOwnProperty(key) ){
-                    for( var counter = 0; counter < this._formElements[key].length; counter+=1 ){
-                        if( !this._formElements[key][counter].validate() ) {
+            for (var key in this._formElements) {
+                if (this._formElements.hasOwnProperty(key)) {
+                    for (var counter = 0; counter < this._formElements[key].length; counter += 1) {
+                        if (!this._formElements[key][counter].validate()) {
                             errorElements.push(this._formElements[key][counter]);
                         }
                     }
                 }
             }
 
-            if( errorElements.length === 0 ){
-                if( typeof this._options.onSuccess === 'function' ){
+            if (errorElements.length === 0) {
+                if (typeof this._options.onSuccess === 'function') {
                     this._options.onSuccess();
                 }
                 return true;
             } else {
-                if( typeof this._options.onError === 'function' ){
-                    this._options.onError( errorElements );
+                if (typeof this._options.onError === 'function') {
+                    this._options.onError(errorElements);
                 }
+                InkArray.each(this._markedErrorElements, Ink.bind(Css.removeClassName, Css, 'validation'));
+                InkArray.each(this._markedErrorElements, Ink.bind(Css.removeClassName, Css, 'error'));
+                InkArray.each(this._errorMessages, Element.remove);
+                this._errorMessages = [];
+                this._markedErrorElements = [];
+                InkArray.each(errorElements, Ink.bind(function(formElement) {
+                    var controlGroupElement;
+                    var controlElement;
+                    if (Css.hasClassName(formElement.getElement(), 'control-group')) {
+                        controlGroupElement = formElement.getElement();
+                        controlElement = Ink.s('.control', formElement.getElement());
+                    } else {
+                        controlGroupElement = Element.findUpwardsByClass(formElement.getElement(), 'control-group');
+                        controlElement = Element.findUpwardsByClass(formElement.getElement(), 'control');
+                    }
+                    if (!controlElement || !controlGroupElement) {
+                        controlElement = controlGroupElement = formElement.getElement();
+                    }
+
+                    Css.addClassName(controlGroupElement, 'validation');
+                    Css.addClassName(controlGroupElement, 'error');
+                    this._markedErrorElements.push(controlGroupElement);
+
+                    var paragraph = document.createElement('p');
+                    Css.addClassName(paragraph, 'tip');
+                    Element.insertAfter(paragraph, controlElement);
+                    var errors = formElement.getErrors();
+                    var errorArr = [];
+                    for (var k in errors) {
+                        if (errors.hasOwnProperty(k)) {
+                            errorArr.push(errors[k]);
+                        }
+                    }
+                    paragraph.innerHTML = errorArr.join('<br/>');
+                    this._errorMessages.push(paragraph);
+                }, this));
                 return false;
             }
         }
